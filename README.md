@@ -1,0 +1,223 @@
+# Product Search - Express.js + Vercel
+
+A modern Express.js REST API for searching products across multiple categories (cars, mobiles, bikes), migrated from Spring Boot. Designed for serverless deployment on Vercel with Turso Cloud SQLite backend.
+
+## Features
+
+- **Dynamic Product Search**: Filter cars and mobiles by various specifications
+- **Firebase Authentication**: Secure JWT-based authentication
+- **Flexible Filtering**: Support for multiple conditions (=, >=, <=, <, >, IN)
+- **Sorting & Pagination**: Order results and paginate through large datasets
+- **Serverless Deployment**: Ready for Vercel Functions
+- **CORS Enabled**: Configured for Angular frontend integration
+- **Production Ready**: Comprehensive error handling and validation
+
+## Project Structure
+
+```
+src/
+  ├── api/                 # Vercel Functions (endpoints)
+  │   ├── health.ts       # GET /api/health
+  │   └── products/
+  │       └── scan.ts     # POST /api/products/scan
+  ├── config/             # Configuration files
+  │   ├── firebase.ts     # Firebase initialization
+  │   ├── database.ts     # Turso database setup
+  │   └── cors.ts         # CORS configuration
+  ├── middleware/         # Express middleware
+  │   └── auth.ts         # Firebase authentication filter
+  ├── services/           # Business logic
+  │   └── productService.ts  # Product search service
+  ├── mappers/            # Column name mapping
+  │   ├── columnMapper.ts
+  │   └── columnMapperFactory.ts
+  ├── types/              # TypeScript interfaces
+  │   └── index.ts        # API models
+  ├── utils/              # Utility functions
+  │   └── errorHandler.ts # Error handling
+  └── index.ts            # Express app initialization (dev)
+```
+
+## Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Turso Cloud account (for database)
+- Firebase project with service account
+
+## Installation
+
+```bash
+npm install
+```
+
+## Environment Setup
+
+1. Copy `.env.example` to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+2. Fill in your environment variables:
+   - Firebase service account JSON
+   - Turso database URL and token
+   - CORS origins
+
+## Development
+
+```bash
+npm run dev
+```
+
+Server runs on `http://localhost:3000`
+
+## Building
+
+```bash
+npm run build
+```
+
+## Testing
+
+```bash
+npm test
+npm run test:watch
+```
+
+## Deployment to Vercel
+
+1. Connect repository to Vercel
+2. Set environment variables in Vercel project settings
+3. Deploy:
+
+```bash
+vercel deploy
+```
+
+## API Endpoints
+
+### POST /api/products/scan
+
+Search products with filters, sorting, and pagination.
+
+**Authentication**: Required (Firebase JWT)
+
+**Request**:
+
+```typescript
+{
+  product: 'cars' | 'mobiles',
+  columns: string[],
+  conditions?: [{
+    f: string,           // field name
+    o: 'E' | 'EG' | 'ES' | 'S' | 'G' | 'IN',  // operation
+    v: string | number | string[]
+  }],
+  sort?: [{
+    sortBy: string,
+    order: 'ASC' | 'DESC'
+  }],
+  limit?: number,        // max 200
+  offset?: number
+}
+```
+
+**Response**:
+
+```typescript
+{
+  total: number,
+  data: [{
+    i: string | number,  // item ID
+    v: (string | number)[]  // column values
+  }]
+}
+```
+
+### GET /api/health
+
+Health check endpoint.
+
+**Authentication**: Not required
+
+**Response**:
+
+```typescript
+{
+  status: 'UP',
+  version: '1.0.0'
+}
+```
+
+## Database Schema
+
+### cars table
+
+Automotive specifications including:
+
+- Basic: brand, model, year, price
+- Engine: power, torque, displacement
+- Transmission: type, gearbox
+- Features: seats, airbags, sunroof, etc.
+- Safety, Fuel, Infotainment, Aesthetics columns
+
+### mobiles table
+
+Mobile device specifications including:
+
+- Basic: brand, model, price, release_year
+- Display: screen_size, resolution, refresh_rate
+- Camera: rear_mp, front_mp, video_recording
+- Battery: capacity, charging_speed
+- Memory: ram, storage
+- Connectivity: 5g, nfc, etc.
+
+## Migration Notes
+
+This project is a migration from Spring Boot to Express.js:
+
+- **Database**: MySQL → Turso SQLite
+- **Runtime**: Java 21 → Node.js 18+
+- **Framework**: Spring Boot 3.5.7 → Express.js 4.18.2
+- **Deployment**: Google Cloud Run → Vercel Functions
+- **Authentication**: Firebase Admin SDK (maintained)
+
+## Security Considerations
+
+- Firebase JWT validation required for all endpoints except `/api/health`
+- CORS restricted to configured origins
+- Parameterized queries prevent SQL injection
+- Environment variables for sensitive credentials
+- Request validation and error handling for invalid inputs
+
+## Performance
+
+- Turso SQLite optimized for serverless: low latency, minimal cold starts
+- Connection pooling for database efficiency
+- Target response time: <500ms for typical searches
+- Supports concurrent requests via Vercel Function scaling
+
+## Troubleshooting
+
+### Database Connection Issues
+
+- Verify `TURSO_CONNECTION_URL` and `TURSO_AUTH_TOKEN` are correct
+- Check Turso dashboard for database status
+- Ensure tables (cars, mobiles) exist with correct schema
+
+### Firebase Authentication Errors
+
+- Validate Firebase service account JSON format
+- Verify project ID matches Firebase console
+- Check token expiration and claims
+
+### CORS Errors
+
+- Confirm origin is in `CORS_ORIGINS` comma-separated list
+- Verify deployment origin exactly matches configured origin
+- Check browser console for specific error messages
+
+## License
+
+Proprietary - Nimman Technology
