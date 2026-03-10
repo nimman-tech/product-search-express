@@ -3,6 +3,7 @@
  */
 
 import { Response } from 'express';
+import { VercelResponse } from '@vercel/node';
 import { ErrorResponse } from '../types/index.js';
 
 /**
@@ -24,7 +25,7 @@ export class APIError extends Error {
 /**
  * Handle and respond with errors
  */
-export function handleError(err: unknown, res: Response): void {
+export function handleError(err: unknown, res: any): void {
   console.error('Error:', err);
 
   let statusCode = 500;
