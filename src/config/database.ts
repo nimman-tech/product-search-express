@@ -32,7 +32,7 @@ export function initializeDatabase(): Client {
       authToken: token,
     });
 
-    console.log('Database connection initialized successfully');
+    console.info('Database connection initialized successfully');
     return dbClient;
   } catch (error) {
     console.error('Failed to initialize database connection:', error);
@@ -102,7 +102,7 @@ export async function closeDatabase(): Promise<void> {
     try {
       await (dbClient as never as { close: () => Promise<void> }).close?.();
       dbClient = null;
-      console.log('Database connection closed');
+      console.info('Database connection closed');
     } catch (error) {
       console.error('Error closing database connection:', error);
     }

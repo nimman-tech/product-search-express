@@ -25,6 +25,7 @@ export function initializeFirebase(): void {
     try {
       serviceAccount = JSON.parse(serviceAccountJson);
     } catch (err) {
+      // eslint-disable-next-line preserve-caught-error
       throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT JSON: ${err}`);
     }
 
@@ -33,7 +34,7 @@ export function initializeFirebase(): void {
     });
 
     firebaseInitialized = true;
-    console.log('Firebase Admin SDK initialized successfully');
+    console.info('Firebase Admin SDK initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Firebase Admin SDK:', error);
     throw error;
@@ -59,6 +60,7 @@ export async function verifyToken(token: string): Promise<admin.auth.DecodedIdTo
     return await auth.verifyIdToken(token);
   } catch (error) {
     const err = error as admin.FirebaseError;
+    // eslint-disable-next-line preserve-caught-error
     throw new Error(`Token verification failed: ${err.message}`);
   }
 }

@@ -61,8 +61,40 @@ cp .env.example .env.local
 
 2. Fill in your environment variables:
    - Firebase service account JSON
-   - Turso database URL and token
+   - Turso database URL and token (see **Local Turso Development** below)
    - CORS origins
+
+### Local Turso Development (Option A)
+
+For local development without syncing to the Turso cloud, run a local Turso/libsql server and point the app to it.
+
+1. Install the Turso CLI (macOS):
+
+```bash
+brew install tursodatabase/tap/turso
+```
+
+2. Start a local Turso server:
+
+```bash
+turso dev --db-file ./sqlite/products-local.db
+```
+
+This prints a local endpoint (usually `http://127.0.0.1:8000`).
+
+3. Update `.env.local` to use the local endpoint:
+
+```env
+TURSO_CONNECTION_URL=http://127.0.0.1:8000
+```
+
+4. Confirm the local server is running (optional):
+
+```bash
+turso local status
+```
+
+> ✅ The app will connect locally and will not sync to Turso cloud unless you explicitly run `turso sync`.
 
 ## Development
 

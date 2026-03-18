@@ -3,13 +3,7 @@
  * Testing search validation, query building, and response formatting
  */
 
-import {
-  ProductType,
-  Operation,
-  SortOrder,
-  SearchRequest,
-  Condition,
-} from '../../types/index';
+import { ProductType, Operation, SortOrder, SearchRequest } from '../../types/index';
 import { APIError } from '../../utils/errorHandler';
 
 // Mock the database module
@@ -24,10 +18,8 @@ jest.mock('../../mappers/columnMapper.js', () => ({
   ColumnMapperFactory: {
     getMapper: jest.fn(() => ({
       mapColumn: jest.fn((col: string) => col),
-      getAllColumns: jest.fn(() => [
-        'id', 'brand', 'model', 'year', 'price',
-      ]),
-      validateColumns: jest.fn((cols: string[]) => true),
+      getAllColumns: jest.fn(() => ['id', 'brand', 'model', 'year', 'price']),
+      validateColumns: jest.fn((_cols: string[]) => true),
     })),
   },
 }));
@@ -38,8 +30,12 @@ import * as dbModule from '../../config/database';
 import { ColumnMapperFactory } from '../../mappers/columnMapper';
 
 const mockExecuteQuery = dbModule.executeQuery as jest.MockedFunction<typeof dbModule.executeQuery>;
-const mockExecuteQueryOne = dbModule.executeQueryOne as jest.MockedFunction<typeof dbModule.executeQueryOne>;
-const mockGetMapper = ColumnMapperFactory.getMapper as jest.MockedFunction<typeof ColumnMapperFactory.getMapper>;
+const mockExecuteQueryOne = dbModule.executeQueryOne as jest.MockedFunction<
+  typeof dbModule.executeQueryOne
+>;
+const mockGetMapper = ColumnMapperFactory.getMapper as jest.MockedFunction<
+  typeof ColumnMapperFactory.getMapper
+>;
 
 describe('scanProduct - Request Validation', () => {
   beforeEach(() => {
@@ -281,10 +277,7 @@ describe('scanProduct - Conditions Handling', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('FROM cars'),
-      []
-    );
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('FROM cars'), []);
   });
 
   it('should execute with single condition', async () => {
@@ -435,10 +428,7 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('ORDER BY'),
-      []
-    );
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), []);
   });
 
   it('should execute with multiple sorts', async () => {
@@ -462,10 +452,7 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('ORDER BY'),
-      []
-    );
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), []);
   });
 
   it('should handle ascending sort', async () => {
@@ -485,10 +472,7 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('ASC'),
-      []
-    );
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ASC'), []);
   });
 
   it('should handle descending sort', async () => {
@@ -508,10 +492,7 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('DESC'),
-      []
-    );
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('DESC'), []);
   });
 });
 
@@ -520,7 +501,7 @@ describe('scanProduct - Database Error Handling', () => {
     const request: Partial<SearchRequest> = {
       product: ProductType.CAR,
       // Missing required 'columns' property
-    } as any;
+    } as unknown as SearchRequest;
 
     await expect(scanProduct(request as SearchRequest)).rejects.toThrow();
   });

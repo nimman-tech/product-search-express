@@ -19,7 +19,7 @@ export function getCorsConfig(): CorsOptions {
   const allowedOrigins = parseCorsOrigins();
 
   return {
-    origin: (origin, callback) => {
+    origin: (origin, callback): void => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) {
         return callback(null, true);

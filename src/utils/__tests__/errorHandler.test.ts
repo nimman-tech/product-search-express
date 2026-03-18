@@ -3,7 +3,14 @@
  * Testing custom error classes and handler functions
  */
 
-import { APIError, handleError, createValidationError, createAuthError, createNotFoundError, createDatabaseError } from '../errorHandler';
+import {
+  APIError,
+  handleError,
+  createValidationError,
+  createAuthError,
+  createNotFoundError,
+  createDatabaseError,
+} from '../errorHandler';
 
 describe('APIError', () => {
   it('should create error with all properties', () => {
@@ -51,8 +58,8 @@ describe('createValidationError', () => {
 
     expect(error.statusCode).toBe(400);
     expect(error.code).toBe('VALIDATION_ERROR');
-    expect((error.details as any).field).toBe('field123-test');
-    expect((error.details as any).reason).toBe('Reason with !@#$');
+    expect((error.details as Record<string, unknown>).field).toBe('field123-test');
+    expect((error.details as Record<string, unknown>).reason).toBe('Reason with !@#$');
   });
 });
 
@@ -135,7 +142,7 @@ describe('createDatabaseError', () => {
 });
 
 describe('handleError - APIError', () => {
-  let mockRes: any;
+  let mockRes: { status: jest.Mock; json: jest.Mock };
 
   beforeEach(() => {
     mockRes = {
@@ -146,7 +153,7 @@ describe('handleError - APIError', () => {
 
   it('should handle APIError correctly', () => {
     const error = new APIError(422, 'INPUT_INVALID', 'Invalid input', { field: 'username' });
-    handleError(error, mockRes);
+    handleError(error, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(422);
     expect(mockRes.json).toHaveBeenCalledWith({
@@ -158,7 +165,7 @@ describe('handleError - APIError', () => {
 
   it('should handle APIError without details', () => {
     const error = new APIError(403, 'FORBIDDEN', 'Access denied');
-    handleError(error, mockRes);
+    handleError(error, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(403);
     expect(mockRes.json).toHaveBeenCalledWith({
@@ -169,7 +176,7 @@ describe('handleError - APIError', () => {
 });
 
 describe('handleError - SyntaxError', () => {
-  let mockRes: any;
+  let mockRes: { status: jest.Mock; json: jest.Mock };
 
   beforeEach(() => {
     mockRes = {
@@ -180,7 +187,7 @@ describe('handleError - SyntaxError', () => {
 
   it('should handle SyntaxError as bad request', () => {
     const error = new SyntaxError('Unexpected token }');
-    handleError(error, mockRes);
+    handleError(error, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(400);
     expect(mockRes.json).toHaveBeenCalledWith({
@@ -192,7 +199,7 @@ describe('handleError - SyntaxError', () => {
 });
 
 describe('handleError - Generic Error', () => {
-  let mockRes: any;
+  let mockRes: { status: jest.Mock; json: jest.Mock };
 
   beforeEach(() => {
     mockRes = {
@@ -203,7 +210,7 @@ describe('handleError - Generic Error', () => {
 
   it('should handle generic Error', () => {
     const error = new Error('Something went wrong');
-    handleError(error, mockRes);
+    handleError(error, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
     expect(mockRes.json).toHaveBeenCalledWith({
@@ -214,7 +221,7 @@ describe('handleError - Generic Error', () => {
 });
 
 describe('handleError - Unknown Error', () => {
-  let mockRes: any;
+  let mockRes: { status: jest.Mock; json: jest.Mock };
 
   beforeEach(() => {
     mockRes = {
@@ -225,7 +232,7 @@ describe('handleError - Unknown Error', () => {
 
   it('should handle unknown error type', () => {
     const error = 'string error';
-    handleError(error, mockRes);
+    handleError(error, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
     expect(mockRes.json).toHaveBeenCalledWith({
@@ -235,7 +242,7 @@ describe('handleError - Unknown Error', () => {
   });
 
   it('should handle null error', () => {
-    handleError(null, mockRes);
+    handleError(null, mockRes as never);
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
     expect(mockRes.json).toHaveBeenCalledWith({

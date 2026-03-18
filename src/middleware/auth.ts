@@ -12,6 +12,7 @@ import { createAuthError, handleError } from '../utils/errorHandler.js';
  * Extend Express Request to include user context
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: RequestContext;
@@ -43,7 +44,7 @@ export async function authMiddleware(
     const token = authHeader.substring(7); // Remove "Bearer " prefix
 
     // Verify token with Firebase
-    const decodedToken = (await verifyToken(token)) as FirebaseTokenClaams;
+    const decodedToken = (await verifyToken(token)) as FirebaseTokenClaims;
 
     // Extract user info from token
     req.user = {
@@ -78,7 +79,7 @@ export async function optionalAuthMiddleware(
     const token = authHeader.substring(7);
 
     try {
-      const decodedToken = (await verifyToken(token)) as FirebaseTokenClaams;
+      const decodedToken = (await verifyToken(token)) as FirebaseTokenClaims;
 
       req.user = {
         uid: decodedToken.uid,
@@ -107,16 +108,4 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
   next();
-}
-
-/**
- * Type definition for decoded Firebase token
- */
-interface FirebaseTokenClaams {
-  uid: string;
-  email?: string;
-  roles?: string[];
-  iat?: number;
-  exp?: number;
-  [key: string]: unknown;
 }

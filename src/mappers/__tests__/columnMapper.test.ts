@@ -77,7 +77,7 @@ describe('CarColumnMapper', () => {
       } catch (error: unknown) {
         const err = error as APIError;
         expect(err.details).toHaveProperty('validColumns');
-        expect((err.details as any).validColumns).toBeInstanceOf(Array);
+        expect((err.details as Record<string, unknown>).validColumns).toBeInstanceOf(Array);
       }
     });
 

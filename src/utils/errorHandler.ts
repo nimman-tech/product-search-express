@@ -25,7 +25,7 @@ export class APIError extends Error {
 /**
  * Handle and respond with errors
  */
-export function handleError(err: unknown, res: any): void {
+export function handleError(err: unknown, res: Response | VercelResponse): void {
   console.error('Error:', err);
 
   let statusCode = 500;

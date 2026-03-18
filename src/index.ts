@@ -29,7 +29,7 @@ app.use(cors(getCorsConfig()));
 try {
   initializeFirebase();
   initializeDatabase();
-  console.log('Firebase and Database initialized successfully');
+  console.info('Firebase and Database initialized successfully');
 } catch (error) {
   console.error('Failed to initialize services:', error);
   process.exit(1);
@@ -86,21 +86,21 @@ app.use((req, res) => {
 /**
  * Error Handler (global)
  */
-app.use((err: unknown, req: express.Request, res: Response, next: express.NextFunction) => {
+app.use((err: unknown, req: express.Request, res: Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err);
   handleError(err, res);
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Product Search API running on http://localhost:${PORT}`);
-  console.log(`📝 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🔍 Search endpoint: POST http://localhost:${PORT}/api/products/scan`);
+  console.info(`🚀 Product Search API running on http://localhost:${PORT}`);
+  console.info(`📝 Health check: http://localhost:${PORT}/api/health`);
+  console.info(`🔍 Search endpoint: POST http://localhost:${PORT}/api/products/scan`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  console.info('SIGTERM received, shutting down gracefully...');
   process.exit(0);
 });
 
