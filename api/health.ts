@@ -5,7 +5,7 @@
  */
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { HealthData } from '../../src/types/index.js';
+import { HealthData } from '../src/types/index.js';
 
 /**
  * Handler for GET /api/health
