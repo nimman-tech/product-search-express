@@ -15,21 +15,23 @@ export function initializeDatabase(): Client {
     return dbClient;
   }
 
-  const url = process.env.TURSO_CONNECTION_URL;
+  const tursoUrl = process.env.TURSO_CONNECTION_URL;
+  const localDbUrl = process.env.SQLITE_DB_PATH;
   const token = process.env.TURSO_AUTH_TOKEN;
+  const url = tursoUrl || localDbUrl;
 
   if (!url) {
-    throw new Error('TURSO_CONNECTION_URL environment variable is not set');
+    throw new Error('TURSO_CONNECTION_URL or SQLITE_DB_PATH environment variable is not set');
   }
 
-  if (!token) {
-    throw new Error('TURSO_AUTH_TOKEN environment variable is not set');
+  if (tursoUrl && !token) {
+    throw new Error('TURSO_AUTH_TOKEN environment variable is required for Turso');
   }
 
   try {
     dbClient = createClient({
       url,
-      authToken: token,
+      authToken: token ?? undefined,
     });
 
     console.info('Database connection initialized successfully');

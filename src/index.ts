@@ -12,7 +12,7 @@ import { getCorsConfig } from './config/cors.js';
 import { handleError } from './utils/errorHandler.js';
 
 // Load environment variables
-dotenv.config({ path: ['.env.local', '.env'] });
+dotenv.config({ path: ['.env.local', '.env'], debug: true });
 
 // Initialize app
 const app = express();
