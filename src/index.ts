@@ -9,13 +9,10 @@ import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
 import { initializeDatabase } from './config/database.js';
 import { getCorsConfig } from './config/cors.js';
-import { authMiddleware } from './middleware/auth.js';
-import { scanProduct } from './services/productService.js';
 import { handleError } from './utils/errorHandler.js';
-import { SearchRequest } from './types/index.js';
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ['.env.local', '.env'] });
 
 // Initialize app
 const app = express();
@@ -35,40 +32,27 @@ try {
   process.exit(1);
 }
 
-/**
- * Health Check Endpoint (Public)
- */
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'UP',
-    others: {
-      version: '1.0.0',
-      service: 'product-search-express',
-      timestamp: new Date().toISOString(),
-    },
-  });
-});
+import v1Routes from './routes/v1/index.js';
 
 /**
- * Product Search Endpoint (Protected)
+ * Mount API Routes
  */
-app.post('/api/products/scan', authMiddleware, async (req, res) => {
-  try {
-    const searchRequest: SearchRequest = req.body;
-    const result = await scanProduct(searchRequest);
-    res.json(result);
-  } catch (error) {
-    handleError(error, res);
-  }
-});
+// Explicit V1 routes
+app.use('/api/v1', v1Routes);
+
+// Explicit V2 routes. Its same as v1 for now. But keep the structure for future
+// app.use('/api/v2', v2Routes);
+
+// Default unversioned /api/* routes map to the latest (V2)
+app.use('/api', v1Routes);
 
 /**
- * Health check at root (for load balancers)
+ * Root Health check (for load balancers)
  */
 app.get('/health', (req, res) => {
   res.json({
     status: 'UP',
-    version: '1.0.0',
+    version: '1.0.0', // Service version
   });
 });
 
@@ -93,9 +77,12 @@ app.use((err: unknown, req: express.Request, res: Response, _next: express.NextF
 
 // Start server
 app.listen(PORT, () => {
-  console.info(`🚀 Product Search API running on http://localhost:${PORT}`);
-  console.info(`📝 Health check: http://localhost:${PORT}/api/health`);
-  console.info(`🔍 Search endpoint: POST http://localhost:${PORT}/api/products/scan`);
+  console.info(`[INFO] Server starting on port ${PORT}`);
+  console.info(`[INFO] Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.info(`[INFO] Health check available at: http://localhost:${PORT}/api/health`);
+  console.info(
+    `[INFO] Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
+  );
 });
 
 // Graceful shutdown
