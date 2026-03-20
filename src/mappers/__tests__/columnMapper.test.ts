@@ -10,99 +10,89 @@ import { APIError } from '../../utils/errorHandler';
 describe('CarColumnMapper', () => {
   const mapper = ColumnMapperFactory.getMapper(ProductType.CAR);
 
-  describe('Valid columns', () => {
-    it('should map basic info columns', () => {
-      expect(mapper.mapColumn('id')).toBe('id');
-      expect(mapper.mapColumn('brand')).toBe('brand');
-      expect(mapper.mapColumn('model')).toBe('model');
-      expect(mapper.mapColumn('year')).toBe('year');
-      expect(mapper.mapColumn('price')).toBe('price');
-      expect(mapper.mapColumn('color')).toBe('color');
+  describe('Valid shorthand key mapping', () => {
+    it('should map make/brand shorthand keys', () => {
+      expect(mapper.mapColumn('a')).toBe('make');
+      expect(mapper.mapColumn('b')).toBe('model');
+      expect(mapper.mapColumn('c')).toBe('variant');
+      expect(mapper.mapColumn('d')).toBe('year');
+      expect(mapper.mapColumn('e')).toBe('price');
+      expect(mapper.mapColumn('f')).toBe('seats');
     });
 
-    it('should map engine and performance columns', () => {
-      expect(mapper.mapColumn('engine_type')).toBe('engine_type');
-      expect(mapper.mapColumn('displacement')).toBe('displacement');
-      expect(mapper.mapColumn('power')).toBe('power');
-      expect(mapper.mapColumn('torque')).toBe('torque');
-      expect(mapper.mapColumn('top_speed')).toBe('top_speed');
+    it('should map body dimension shorthand keys', () => {
+      expect(mapper.mapColumn('g.a')).toBe('body_type');
+      expect(mapper.mapColumn('g.b')).toBe('body_length');
+      expect(mapper.mapColumn('g.c')).toBe('body_width');
+      expect(mapper.mapColumn('g.d')).toBe('body_height');
+      expect(mapper.mapColumn('g.e')).toBe('body_wheel_base');
     });
 
-    it('should map dimension columns', () => {
-      expect(mapper.mapColumn('length')).toBe('length');
-      expect(mapper.mapColumn('width')).toBe('width');
-      expect(mapper.mapColumn('height')).toBe('height');
-      expect(mapper.mapColumn('weight')).toBe('weight');
+    it('should map engine shorthand keys', () => {
+      expect(mapper.mapColumn('j.a')).toBe('engine_type');
+      expect(mapper.mapColumn('j.b')).toBe('engine_displacement');
+      expect(mapper.mapColumn('j.c')).toBe('engine_hp');
+      expect(mapper.mapColumn('j.d')).toBe('engine_torque');
+      expect(mapper.mapColumn('j.e')).toBe('engine_time0to100');
     });
 
-    it('should map feature columns', () => {
-      expect(mapper.mapColumn('sunroof')).toBe('sunroof');
-      expect(mapper.mapColumn('leather_seats')).toBe('leather_seats');
-      expect(mapper.mapColumn('bluetooth')).toBe('bluetooth');
+    it('should map feature shorthand keys', () => {
+      expect(mapper.mapColumn('l.a')).toBe('feature_sunroof');
+      expect(mapper.mapColumn('l.b')).toBe('feature_ventilated_seats');
+      expect(mapper.mapColumn('l.c')).toBe('feature_wireless_charger');
     });
 
-    it('should map safety columns', () => {
-      expect(mapper.mapColumn('airbags_count')).toBe('airbags_count');
-      expect(mapper.mapColumn('abs')).toBe('abs');
-      expect(mapper.mapColumn('traction_control')).toBe('traction_control');
+    it('should map safety shorthand keys', () => {
+      expect(mapper.mapColumn('i.a')).toBe('safety_ncap');
+      expect(mapper.mapColumn('i.b')).toBe('safety_airbags');
     });
 
-    it('should map infotainment columns', () => {
-      expect(mapper.mapColumn('touchscreen_size')).toBe('touchscreen_size');
-      expect(mapper.mapColumn('apple_carplay')).toBe('apple_carplay');
-      expect(mapper.mapColumn('android_auto')).toBe('android_auto');
+    it('should map infotainment shorthand keys', () => {
+      expect(mapper.mapColumn('m.a')).toBe('infotainment_available');
+      expect(mapper.mapColumn('m.b')).toBe('infotainment_size');
+      expect(mapper.mapColumn('m.c')).toBe('infotainment_android');
+      expect(mapper.mapColumn('m.d')).toBe('infotainment_apple');
     });
   });
 
-  describe('Invalid columns', () => {
-    it('should throw error for non-existent column', () => {
-      expect(() => mapper.mapColumn('invalid_column')).toThrow(APIError);
+  describe('Unknown column passthrough', () => {
+    it('should return input as-is for unknown column', () => {
+      expect(mapper.mapColumn('invalid_column')).toBe('invalid_column');
     });
 
-    it('should throw error with correct status code', () => {
-      try {
-        mapper.mapColumn('fake_column');
-        fail('Should have thrown error');
-      } catch (error: unknown) {
-        const err = error as APIError;
-        expect(err.statusCode).toBe(400);
-        expect(err.code).toBe('INVALID_COLUMN');
-      }
+    it('should return input as-is for empty string', () => {
+      expect(mapper.mapColumn('')).toBe('');
     });
 
-    it('should include valid columns in error details', () => {
-      try {
-        mapper.mapColumn('nonexistent');
-        fail('Should have thrown error');
-      } catch (error: unknown) {
-        const err = error as APIError;
-        expect(err.details).toHaveProperty('validColumns');
-        expect((err.details as Record<string, unknown>).validColumns).toBeInstanceOf(Array);
-      }
+    it('should return input as-is for case-sensitive mismatch', () => {
+      expect(mapper.mapColumn('Brand')).toBe('Brand');
+      expect(mapper.mapColumn('BRAND')).toBe('BRAND');
     });
 
-    it('should throw error for empty string', () => {
-      expect(() => mapper.mapColumn('')).toThrow(APIError);
-    });
-
-    it('should throw error for case-sensitive mismatch', () => {
-      expect(() => mapper.mapColumn('Brand')).toThrow(APIError);
-      expect(() => mapper.mapColumn('BRAND')).toThrow(APIError);
+    it('should not throw for any unknown column', () => {
+      expect(() => mapper.mapColumn('nonexistent')).not.toThrow();
+      expect(() => mapper.mapColumn('fake_column')).not.toThrow();
     });
   });
 
   describe('getAllColumns', () => {
-    it('should return array of columns', () => {
+    it('should return array of shorthand keys', () => {
       const columns = mapper.getAllColumns();
       expect(Array.isArray(columns)).toBe(true);
       expect(columns.length).toBeGreaterThan(0);
     });
 
-    it('should include basic columns', () => {
+    it('should include basic shorthand keys', () => {
       const columns = mapper.getAllColumns();
-      expect(columns).toContain('id');
-      expect(columns).toContain('brand');
-      expect(columns).toContain('model');
+      expect(columns).toContain('a');
+      expect(columns).toContain('b');
+      expect(columns).toContain('d');
+    });
+
+    it('should include feature shorthand keys', () => {
+      const columns = mapper.getAllColumns();
+      expect(columns).toContain('l.a');
+      expect(columns).toContain('j.a');
     });
 
     it('should return consistent results', () => {
@@ -113,28 +103,28 @@ describe('CarColumnMapper', () => {
   });
 
   describe('validateColumns', () => {
-    it('should validate single valid column', () => {
-      expect(mapper.validateColumns(['brand'])).toBe(true);
+    it('should validate single valid shorthand key', () => {
+      expect(mapper.validateColumns(['a'])).toBe(true);
     });
 
-    it('should validate multiple valid columns', () => {
-      expect(mapper.validateColumns(['brand', 'model', 'year'])).toBe(true);
+    it('should validate multiple valid shorthand keys', () => {
+      expect(mapper.validateColumns(['a', 'b', 'd'])).toBe(true);
     });
 
-    it('should reject invalid column', () => {
+    it('should reject unknown key', () => {
       expect(mapper.validateColumns(['invalid'])).toBe(false);
     });
 
-    it('should reject mixed valid and invalid columns', () => {
-      expect(mapper.validateColumns(['brand', 'invalid'])).toBe(false);
+    it('should reject mixed valid and invalid keys', () => {
+      expect(mapper.validateColumns(['a', 'invalid'])).toBe(false);
     });
 
     it('should validate empty array', () => {
       expect(mapper.validateColumns([])).toBe(true);
     });
 
-    it('should handle duplicate columns', () => {
-      expect(mapper.validateColumns(['brand', 'brand'])).toBe(true);
+    it('should handle duplicate keys', () => {
+      expect(mapper.validateColumns(['a', 'a'])).toBe(true);
     });
   });
 });
@@ -142,142 +132,74 @@ describe('CarColumnMapper', () => {
 describe('MobileColumnMapper', () => {
   const mapper = ColumnMapperFactory.getMapper(ProductType.MOBILE);
 
-  describe('Valid columns', () => {
-    it('should map basic info columns', () => {
-      expect(mapper.mapColumn('brand')).toBe('brand');
-      expect(mapper.mapColumn('model')).toBe('model');
-      expect(mapper.mapColumn('price')).toBe('price');
+  describe('Valid shorthand key mapping', () => {
+    it('should map basic info shorthand keys', () => {
+      expect(mapper.mapColumn('a')).toBe('make');
+      expect(mapper.mapColumn('b')).toBe('model');
+      expect(mapper.mapColumn('e')).toBe('price');
     });
 
-    it('should map display columns', () => {
-      expect(mapper.mapColumn('screen_size')).toBe('screen_size');
-      expect(mapper.mapColumn('screen_type')).toBe('screen_type');
-      expect(mapper.mapColumn('refresh_rate')).toBe('refresh_rate');
+    it('should map display shorthand keys', () => {
+      expect(mapper.mapColumn('l.b')).toBe('display_size');
+      expect(mapper.mapColumn('l.a')).toBe('display_type');
+      expect(mapper.mapColumn('l.d')).toBe('display_refresh_rate');
     });
 
-    it('should map processor columns', () => {
-      expect(mapper.mapColumn('processor')).toBe('processor');
-      expect(mapper.mapColumn('ram')).toBe('ram');
-      expect(mapper.mapColumn('cpu_cores')).toBe('cpu_cores');
+    it('should map platform shorthand keys', () => {
+      expect(mapper.mapColumn('n.a')).toBe('platform_os');
+      expect(mapper.mapColumn('n.b')).toBe('platform_os_version');
     });
 
-    it('should map camera columns', () => {
-      expect(mapper.mapColumn('rear_camera_mp')).toBe('rear_camera_mp');
-      expect(mapper.mapColumn('front_camera_mp')).toBe('front_camera_mp');
+    it('should map camera shorthand keys', () => {
+      expect(mapper.mapColumn('j.a.a')).toBe('cameras_main_megapixel');
+      expect(mapper.mapColumn('j.b.a')).toBe('cameras_front_megapixel');
     });
 
-    it('should map battery columns', () => {
-      expect(mapper.mapColumn('battery_capacity')).toBe('battery_capacity');
-      expect(mapper.mapColumn('fast_charging')).toBe('fast_charging');
-      expect(mapper.mapColumn('wireless_charging')).toBe('wireless_charging');
+    it('should map battery shorthand keys', () => {
+      expect(mapper.mapColumn('i.b')).toBe('battery_capacity');
+      expect(mapper.mapColumn('i.c')).toBe('battery_charging_wired');
+      expect(mapper.mapColumn('i.d')).toBe('battery_charging_wireless');
     });
 
-    it('should map connectivity columns', () => {
-      expect(mapper.mapColumn('cellular_5g')).toBe('cellular_5g');
-      expect(mapper.mapColumn('wifi')).toBe('wifi');
-      expect(mapper.mapColumn('nfc')).toBe('nfc');
-    });
-  });
-
-  describe('Invalid columns', () => {
-    it('should throw error for non-existent column', () => {
-      expect(() => mapper.mapColumn('engine_type')).toThrow(APIError);
+    it('should map connectivity shorthand keys', () => {
+      expect(mapper.mapColumn('k.n')).toBe('features_support5g');
+      expect(mapper.mapColumn('k.o')).toBe('features_wifi');
+      expect(mapper.mapColumn('k.l')).toBe('features_nfc');
     });
 
-    it('should throw error with correct code', () => {
-      try {
-        mapper.mapColumn('nonsense');
-        fail('Should have thrown error');
-      } catch (error: unknown) {
-        const err = error as APIError;
-        expect(err.code).toBe('INVALID_COLUMN');
-      }
+    it('should map memory shorthand keys', () => {
+      expect(mapper.mapColumn('o.a')).toBe('memory_ram');
+      expect(mapper.mapColumn('o.b')).toBe('memory_storage');
     });
   });
 
-  describe('getAllColumns', () => {
-    it('should return array of mobile columns', () => {
-      const columns = mapper.getAllColumns();
-      expect(columns).toContain('screen_size');
-      expect(columns).toContain('battery_capacity');
-      expect(columns).toContain('processor');
-    });
-  });
-
-  describe('validateColumns', () => {
-    it('should validate mobile-specific columns', () => {
-      expect(mapper.validateColumns(['screen_size', 'battery_capacity'])).toBe(true);
-    });
-
-    it('should reject car-specific columns', () => {
-      expect(mapper.validateColumns(['engine_type'])).toBe(false);
-    });
-  });
-});
-
-describe('BikeColumnMapper', () => {
-  const mapper = ColumnMapperFactory.getMapper(ProductType.BIKE);
-
-  describe('Valid columns', () => {
-    it('should map basic info columns', () => {
-      expect(mapper.mapColumn('brand')).toBe('brand');
-      expect(mapper.mapColumn('model')).toBe('model');
-      expect(mapper.mapColumn('year')).toBe('year');
-      expect(mapper.mapColumn('price')).toBe('price');
-    });
-
-    it('should map engine columns', () => {
+  describe('Unknown column passthrough', () => {
+    it('should return input as-is for unknown column', () => {
       expect(mapper.mapColumn('engine_type')).toBe('engine_type');
-      expect(mapper.mapColumn('displacement')).toBe('displacement');
-      expect(mapper.mapColumn('power')).toBe('power');
-      expect(mapper.mapColumn('torque')).toBe('torque');
     });
 
-    it('should map suspension and brake columns', () => {
-      expect(mapper.mapColumn('front_suspension')).toBe('front_suspension');
-      expect(mapper.mapColumn('rear_suspension')).toBe('rear_suspension');
-      expect(mapper.mapColumn('front_brake_type')).toBe('front_brake_type');
-      expect(mapper.mapColumn('abs')).toBe('abs');
-    });
-
-    it('should map comfort columns', () => {
-      expect(mapper.mapColumn('seat_height')).toBe('seat_height');
-      expect(mapper.mapColumn('seat_type')).toBe('seat_type');
-    });
-  });
-
-  describe('Invalid columns', () => {
-    it('should throw error for car-specific columns', () => {
-      expect(() => mapper.mapColumn('panoramic_sunroof')).toThrow(APIError);
-    });
-
-    it('should throw error for mobile-specific columns', () => {
-      expect(() => mapper.mapColumn('screen_size')).toThrow(APIError);
+    it('should return input as-is and not throw', () => {
+      expect(() => mapper.mapColumn('nonsense')).not.toThrow();
+      expect(mapper.mapColumn('nonsense')).toBe('nonsense');
     });
   });
 
   describe('getAllColumns', () => {
-    it('should return bike-specific columns', () => {
+    it('should return array of mobile shorthand keys', () => {
       const columns = mapper.getAllColumns();
-      expect(columns).toContain('engine_type');
-      expect(columns).toContain('front_suspension');
-      expect(columns).toContain('seat_height');
-    });
-
-    it('should not include car-specific columns', () => {
-      const columns = mapper.getAllColumns();
-      expect(columns).not.toContain('panoramic_sunroof');
-      expect(columns).not.toContain('touchscreen_size');
+      expect(columns).toContain('l.b');
+      expect(columns).toContain('i.b');
+      expect(columns).toContain('n.a');
     });
   });
 
   describe('validateColumns', () => {
-    it('should validate bike-specific columns', () => {
-      expect(mapper.validateColumns(['engine_type', 'displacement'])).toBe(true);
+    it('should validate mobile-specific shorthand keys', () => {
+      expect(mapper.validateColumns(['l.b', 'i.b'])).toBe(true);
     });
 
-    it('should reject mobile columns', () => {
-      expect(mapper.validateColumns(['processor'])).toBe(false);
+    it('should reject car-specific shorthand keys not present in mobile map', () => {
+      expect(mapper.validateColumns(['l.a', 'engine_type'])).toBe(false);
     });
   });
 });
@@ -286,30 +208,24 @@ describe('ColumnMapperFactory', () => {
   describe('getMapper', () => {
     it('should return CarColumnMapper for CAR type', () => {
       const mapper = ColumnMapperFactory.getMapper(ProductType.CAR);
-      expect(mapper.mapColumn('brand')).toBe('brand');
-      expect(mapper.getAllColumns()).toContain('sunroof');
+      expect(mapper.mapColumn('a')).toBe('make');
+      expect(mapper.getAllColumns()).toContain('l.a');
     });
 
     it('should return MobileColumnMapper for MOBILE type', () => {
       const mapper = ColumnMapperFactory.getMapper(ProductType.MOBILE);
-      expect(mapper.mapColumn('processor')).toBe('processor');
-      expect(mapper.getAllColumns()).toContain('screen_size');
-    });
-
-    it('should return BikeColumnMapper for BIKE type', () => {
-      const mapper = ColumnMapperFactory.getMapper(ProductType.BIKE);
-      expect(mapper.mapColumn('engine_type')).toBe('engine_type');
-      expect(mapper.getAllColumns()).toContain('front_suspension');
+      expect(mapper.mapColumn('n.a')).toBe('platform_os');
+      expect(mapper.getAllColumns()).toContain('l.b');
     });
 
     it('should return consistent mapper instances', () => {
       const mapper1 = ColumnMapperFactory.getMapper(ProductType.CAR);
       const mapper2 = ColumnMapperFactory.getMapper(ProductType.CAR);
-      expect(mapper1.mapColumn('brand')).toBe(mapper2.mapColumn('brand'));
+      expect(mapper1.mapColumn('a')).toBe(mapper2.mapColumn('a'));
     });
 
     it('should handle all supported product types', () => {
-      const types = [ProductType.CAR, ProductType.BIKE, ProductType.MOBILE];
+      const types = [ProductType.CAR, ProductType.MOBILE];
       types.forEach((type) => {
         expect(() => ColumnMapperFactory.getMapper(type)).not.toThrow();
       });
@@ -334,21 +250,21 @@ describe('ColumnMapperFactory', () => {
   describe('Product Type Isolation', () => {
     it('should have separate column spaces for each product type', () => {
       const carMapper = ColumnMapperFactory.getMapper(ProductType.CAR);
-      const bikeMapper = ColumnMapperFactory.getMapper(ProductType.BIKE);
       const mobileMapper = ColumnMapperFactory.getMapper(ProductType.MOBILE);
 
       const carCols = new Set(carMapper.getAllColumns());
-      const bikeCols = new Set(bikeMapper.getAllColumns());
       const mobileCols = new Set(mobileMapper.getAllColumns());
 
-      // Test some columns are unique to each type
-      expect(carCols.has('sunroof')).toBe(true);
-      expect(bikeCols.has('sunroof')).toBe(false);
-      expect(mobileCols.has('sunroof')).toBe(false);
+      // Car-specific: feature_sunroof mapped via l.a
+      expect(carCols.has('l.a')).toBe(true);
+      // Mobile-specific: display_size mapped via l.b — also exists in car map as body_height
+      // Use a clearly mobile-only key: k.n (features_support5g)
+      expect(mobileCols.has('k.n')).toBe(true);
+      expect(carCols.has('k.n')).toBe(false);
 
-      expect(mobileCols.has('screen_size')).toBe(true);
-      expect(carCols.has('screen_size')).toBe(false);
-      expect(bikeCols.has('screen_size')).toBe(false);
+      // Fuel shorthand exists in car but not mobile
+      expect(carCols.has('j.f.a')).toBe(true);
+      expect(mobileCols.has('j.f.a')).toBe(false);
     });
   });
 });

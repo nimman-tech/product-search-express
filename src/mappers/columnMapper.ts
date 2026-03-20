@@ -40,16 +40,7 @@ abstract class BaseColumnMapper implements ColumnMapper {
   }
 
   mapColumn(apiColumnName: string): string {
-    const dbColumn = this.columnMap.get(apiColumnName);
-    if (!dbColumn) {
-      throw new APIError(
-        400,
-        'INVALID_COLUMN',
-        `Column '${apiColumnName}' does not exist for this product type`,
-        { validColumns: Array.from(this.columnMap.keys()) }
-      );
-    }
-    return dbColumn;
+    return this.columnMap.get(apiColumnName) ?? apiColumnName;
   }
 
   getAllColumns(): string[] {
@@ -67,79 +58,51 @@ abstract class BaseColumnMapper implements ColumnMapper {
 class CarColumnMapper extends BaseColumnMapper {
   constructor() {
     super({
-      // Basic info
-      id: 'id',
-      brand: 'brand',
-      model: 'model',
-      year: 'year',
-      price: 'price',
-      color: 'color',
-
-      // Engine & Performance
-      engine_type: 'engine_type',
-      displacement: 'displacement',
-      power: 'power',
-      torque: 'torque',
-      acceleration_0_100: 'acceleration_0_100',
-      top_speed: 'top_speed',
-
-      // Transmission & Drivetrain
-      transmission_type: 'transmission_type',
-      gearbox_type: 'gearbox_type',
-      drivetrain: 'drivetrain',
-
-      // Fuel & Efficiency
-      fuel_type: 'fuel_type',
-      mileage: 'mileage',
-      tank_capacity: 'tank_capacity',
-      co2_emissions: 'co2_emissions',
-
-      // Dimensions & Capacity
-      length: 'length',
-      width: 'width',
-      height: 'height',
-      wheelbase: 'wheelbase',
-      ground_clearance: 'ground_clearance',
-      weight: 'weight',
-      seating_capacity: 'seating_capacity',
-      boot_space: 'boot_space',
-
-      // Features
-      sunroof: 'sunroof',
-      panoramic_sunroof: 'panoramic_sunroof',
-      leather_seats: 'leather_seats',
-      power_windows: 'power_windows',
-      power_steering: 'power_steering',
-      power_mirrors: 'power_mirrors',
-      ac_type: 'ac_type',
-      heater_type: 'heater_type',
-
-      // Safety
-      airbags_count: 'airbags_count',
-      abs: 'abs',
-      traction_control: 'traction_control',
-      stability_control: 'stability_control',
-      hill_start_assist: 'hill_start_assist',
-      hill_descent_control: 'hill_descent_control',
-
-      // Infotainment
-      touchscreen_size: 'touchscreen_size',
-      apple_carplay: 'apple_carplay',
-      android_auto: 'android_auto',
-      bluetooth: 'bluetooth',
-      aux_input: 'aux_input',
-      usb_ports: 'usb_ports',
-
-      // Lighting
-      headlamp_type: 'headlamp_type',
-      daytime_running_lights: 'daytime_running_lights',
-      adaptive_headlamps: 'adaptive_headlamps',
-
-      // Others
-      warranty_period: 'warranty_period',
-      service_cost_annual: 'service_cost_annual',
-      fuel_door_type: 'fuel_door_type',
-      spare_wheel: 'spare_wheel',
+      avatar: 'make',
+      a: 'make',
+      b: 'model',
+      c: 'variant',
+      d: 'year',
+      e: 'price',
+      f: 'seats',
+      'g.a': 'body_type',
+      'g.b': 'body_length',
+      'g.c': 'body_width',
+      'g.d': 'body_height',
+      'g.e': 'body_wheel_base',
+      'g.f': 'body_wheel_size',
+      'g.g': 'body_ground_clearance',
+      'h.a': 'transmission_type',
+      'h.b': 'transmission_gears',
+      'i.a': 'safety_ncap',
+      'i.b': 'safety_airbags',
+      'j.a': 'engine_type',
+      'j.b': 'engine_displacement',
+      'j.c': 'engine_hp',
+      'j.d': 'engine_torque',
+      'j.e': 'engine_time0to100',
+      'j.f.a': 'fuel_type',
+      'j.f.b': 'kmpl_city',
+      'j.f.c': 'kmpl_highway',
+      'j.f.d': 'full_tank_drive_capacity',
+      'k.a': 'drivetrain_type',
+      'l.a': 'feature_sunroof',
+      'l.b': 'feature_ventilated_seats',
+      'l.c': 'feature_wireless_charger',
+      'l.d': 'feature_reverse_camera',
+      'l.e': 'feature_view360',
+      'l.f': 'feature_watch_connect',
+      'm.a': 'infotainment_available',
+      'm.b': 'infotainment_size',
+      'm.c': 'infotainment_android',
+      'm.d': 'infotainment_apple',
+      'n.a': 'aesthetic_noise',
+      'n.b': 'aesthetic_leg_space',
+      'o.a': 'expense_ppk',
+      'o.b': 'expense_insurance',
+      'o.c': 'expense_service',
+      'o.d': 'expense_service_frequency',
+      z: 'url',
     });
   }
 }
@@ -150,167 +113,72 @@ class CarColumnMapper extends BaseColumnMapper {
 class MobileColumnMapper extends BaseColumnMapper {
   constructor() {
     super({
-      // Basic info
-      id: 'id',
-      brand: 'brand',
-      model: 'model',
-      release_year: 'release_year',
-      price: 'price',
-      color: 'color',
-
-      // Display
-      screen_size: 'screen_size',
-      screen_type: 'screen_type',
-      resolution: 'resolution',
-      brightness: 'brightness',
-      refresh_rate: 'refresh_rate',
-      aspect_ratio: 'aspect_ratio',
-
-      // Processor & RAM
-      processor: 'processor',
-      processor_speed: 'processor_speed',
-      cpu_cores: 'cpu_cores',
-      gpu: 'gpu',
-      ram: 'ram',
-      max_ram: 'max_ram',
-
-      // Storage
-      internal_storage: 'internal_storage',
-      expandable_storage: 'expandable_storage',
-      max_expandable_storage: 'max_expandable_storage',
-      storage_type: 'storage_type',
-
-      // Camera
-      rear_camera_mp: 'rear_camera_mp',
-      rear_camera_aperture: 'rear_camera_aperture',
-      rear_camera_features: 'rear_camera_features',
-      front_camera_mp: 'front_camera_mp',
-      front_camera_features: 'front_camera_features',
-      video_recording: 'video_recording',
-      video_fps: 'video_fps',
-
-      // Battery
-      battery_capacity: 'battery_capacity',
-      battery_type: 'battery_type',
-      fast_charging: 'fast_charging',
-      charging_wattage: 'charging_wattage',
-      fast_charging_time: 'fast_charging_time',
-      wireless_charging: 'wireless_charging',
-
-      // Connectivity
-      network_bands: 'network_bands',
-      cellular_5g: 'cellular_5g',
-      wifi: 'wifi',
-      wifi_standard: 'wifi_standard',
-      bluetooth_version: 'bluetooth_version',
-      nfc: 'nfc',
-      sim_slots: 'sim_slots',
-      sim_type: 'sim_type',
-
-      // Platform & OS
-      operating_system: 'operating_system',
-      os_version: 'os_version',
-      custom_ui: 'custom_ui',
-
-      // Physical
-      dimensions: 'dimensions',
-      weight: 'weight',
-      material: 'material',
-      water_resistance: 'water_resistance',
-      dust_resistance: 'dust_resistance',
-
-      // Audio
-      speaker_count: 'speaker_count',
-      speaker_type: 'speaker_type',
-      headphone_jack: 'headphone_jack',
-      audio_codec: 'audio_codec',
-
-      // Security & Features
-      fingerprint_sensor: 'fingerprint_sensor',
-      facial_recognition: 'facial_recognition',
-      security_patch_frequency: 'security_patch_frequency',
-      sar_value: 'sar_value',
-
-      // Warranty
-      warranty_period: 'warranty_period',
-      manufacturer: 'manufacturer',
-    });
-  }
-}
-
-/**
- * Column mapper for bikes table
- */
-class BikeColumnMapper extends BaseColumnMapper {
-  constructor() {
-    super({
-      // Basic info
-      id: 'id',
-      brand: 'brand',
-      model: 'model',
-      year: 'year',
-      price: 'price',
-      color: 'color',
-
-      // Engine
-      engine_type: 'engine_type',
-      displacement: 'displacement',
-      power: 'power',
-      torque: 'torque',
-      fuel_type: 'fuel_type',
-      mileage: 'mileage',
-
-      // Transmission
-      transmission_type: 'transmission_type',
-      clutch_type: 'clutch_type',
-
-      // Dimensions & Weight
-      length: 'length',
-      width: 'width',
-      height: 'height',
-      wheelbase: 'wheelbase',
-      ground_clearance: 'ground_clearance',
-      weight: 'weight',
-      fuel_tank_capacity: 'fuel_tank_capacity',
-
-      // Suspension & Brakes
-      front_suspension: 'front_suspension',
-      rear_suspension: 'rear_suspension',
-      front_brake_type: 'front_brake_type',
-      rear_brake_type: 'rear_brake_type',
-      abs: 'abs',
-
-      // Tires
-      front_tire_size: 'front_tire_size',
-      rear_tire_size: 'rear_tire_size',
-
-      // Features
-      digital_display: 'digital_display',
-      speedometer_type: 'speedometer_type',
-      gear_indicator: 'gear_indicator',
-      fuel_gauge: 'fuel_gauge',
-      trip_meter: 'trip_meter',
-
-      // Lighting
-      headlamp_type: 'headlamp_type',
-      taillight_type: 'taillight_type',
-      daytime_running_lights: 'daytime_running_lights',
-
-      // Comfort & Ergonomics
-      seat_height: 'seat_height',
-      seat_type: 'seat_type',
-      handlebar_type: 'handlebar_type',
-      foot_pegs: 'foot_pegs',
-
-      // Safety & Tech
-      traction_control: 'traction_control',
-      assist_and_slipper_clutch: 'assist_and_slipper_clutch',
-      engine_kill_switch: 'engine_kill_switch',
-      mobile_app_connectivity: 'mobile_app_connectivity',
-
-      // Warranty
-      warranty_period: 'warranty_period',
-      service_cost_annual: 'service_cost_annual',
+      avatar: 'make',
+      a: 'make',
+      b: 'model',
+      c: 'variant',
+      d: 'year',
+      e: 'price',
+      f: 'url',
+      g: 'value_for_money',
+      h: 'after_sales_service',
+      'i.a.a': 'battery_life_usage',
+      'i.a.b': 'battery_life_standby',
+      'i.a.c': 'battery_life_talk_time',
+      'i.a.d': 'battery_life_gaming',
+      'i.a.e': 'battery_life_video_playback',
+      'i.b': 'battery_capacity',
+      'i.c': 'battery_charging_wired',
+      'i.d': 'battery_charging_wireless',
+      'i.e': 'battery_reverse_charging',
+      'i.f': 'battery_removable',
+      'i.g.a': 'battery_charging_time_wired',
+      'i.g.b': 'battery_charging_time_wireless',
+      'j.a.a': 'cameras_main_megapixel',
+      'j.a.b': 'cameras_main_aperture',
+      'j.a.c': 'cameras_main_focal_length',
+      'j.a.d': 'cameras_main_optical_zoom',
+      'j.a.e': 'cameras_main_digital_zoom',
+      'j.b.a': 'cameras_front_megapixel',
+      'j.b.b': 'cameras_front_type',
+      'j.b.c': 'cameras_front_aperture',
+      'j.c': 'cameras_video_recording_capabilities',
+      'k.a': 'features_face_unlock',
+      'k.b': 'features_fingerprint_sensor',
+      'k.c': 'features_always_on_display',
+      'k.d': 'features_de_x_support',
+      'k.e': 'features_stylus_support',
+      'k.f': 'features_fast_charging',
+      'k.g': 'features_reverse_charging',
+      'k.h': 'features_audio_jack',
+      'k.i': 'features_stereo_speakers',
+      'k.j': 'features_hi_res_audio',
+      'k.k': 'features_gps',
+      'k.l': 'features_nfc',
+      'k.m': 'features_infrared',
+      'k.n': 'features_support5g',
+      'k.o': 'features_wifi',
+      'k.p': 'features_bluetooth',
+      'k.q': 'features_usb',
+      'k.r': 'features_water_resistance',
+      'k.s': 'features_e_sim',
+      'l.a': 'display_type',
+      'l.b': 'display_size',
+      'l.c.a': 'display_resolution_width',
+      'l.c.b': 'display_resolution_height',
+      'l.d': 'display_refresh_rate',
+      'l.e': 'display_brightness',
+      'm.a': 'dimensions_height',
+      'm.b': 'dimensions_width',
+      'm.c': 'dimensions_thickness',
+      'm.d': 'dimensions_weight',
+      'n.a': 'platform_os',
+      'n.b': 'platform_os_version',
+      'o.a': 'memory_ram',
+      'o.b': 'memory_storage',
+      'o.c': 'memory_expandable',
+      'o.d': 'memory_storage_type',
+      'p.a': 'connectivity_sim_count',
     });
   }
 }
@@ -322,7 +190,7 @@ class BikeColumnMapper extends BaseColumnMapper {
 export class ColumnMapperFactory {
   private static mappers: Map<ProductType, ColumnMapper> = new Map([
     [ProductType.CAR, new CarColumnMapper()],
-    [ProductType.BIKE, new BikeColumnMapper()],
+    //[ProductType.BIKE, new BikeColumnMapper()],
     [ProductType.MOBILE, new MobileColumnMapper()],
   ]);
 

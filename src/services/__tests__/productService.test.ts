@@ -64,7 +64,7 @@ describe('scanProduct - Request Validation', () => {
       mockExecuteQuery.mockResolvedValueOnce([]);
       mockExecuteQueryOne.mockResolvedValueOnce({ count: 0 });
 
-      const validTypes = [ProductType.CAR, ProductType.BIKE, ProductType.MOBILE];
+      const validTypes = [ProductType.CAR, ProductType.MOBILE];
       for (const type of validTypes) {
         jest.clearAllMocks();
         mockExecuteQuery.mockResolvedValueOnce([]);

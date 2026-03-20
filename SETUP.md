@@ -18,8 +18,8 @@ This document provides step-by-step instructions for local setup and deployment 
 
 ## Prerequisites
 
-- **Node.js**: 18.0.0 or higher
-- **npm**: 8.0.0 or higher
+- **Node.js**: 20.19.0 or higher
+- **npm**: 10.0.0 or higher
 - **Git**: For version control
 - **Firebase Project**: Active Firebase project with service account
 - **Turso Account**: Cloud SQLite database service (free tier available)
@@ -208,7 +208,7 @@ Click **Deploy**. Vercel will:
 2. Build TypeScript
 3. Deploy to CDN
 
-Wait fordeployment to complete. You'll get a URL like:
+Wait for deployment to complete. You'll get a URL like:
 
 ```
 https://product-search-express.vercel.app
@@ -277,11 +277,21 @@ Or import via Turso dashboard.
 npm test
 ```
 
-### Integration Tests (against Turso)
+### Watch Mode
 
 ```bash
 npm run test:watch
 ```
+
+### HTML Test Report
+
+After running `npm test`, an HTML report is generated at `jest_html_reporters.html`. Open it in your browser to view pass/fail status, execution times, and detailed error information:
+
+```bash
+open jest_html_reporters.html
+```
+
+The report file and its attachments directory (`jest-html-reporters-attach/`) are excluded from version control via `.gitignore`.
 
 ###Manual API Testing
 
@@ -445,4 +455,4 @@ Before going production:
 
 ---
 
-** Last Updated**: March 10, 2026
+**Last Updated**: March 20, 2026

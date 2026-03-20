@@ -1,6 +1,6 @@
 # Product Search - Express.js + Vercel
 
-A modern Express.js REST API for searching products across multiple categories (cars, mobiles, bikes), migrated from Spring Boot. Designed for serverless deployment on Vercel with Turso Cloud SQLite backend.
+A modern Express.js REST API for searching products across multiple categories (cars, mobiles), migrated from Spring Boot. Designed for serverless deployment on Vercel with Turso Cloud SQLite backend.
 
 ## Features
 
@@ -40,7 +40,7 @@ src/
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm or yarn
 - Turso Cloud account (for database)
 - Firebase project with service account
@@ -117,6 +117,18 @@ npm test
 npm run test:watch
 ```
 
+### HTML Test Report
+
+This project uses [`jest-html-reporters`](https://github.com/Hazyzh/jest-html-reporters) to generate a visual HTML report after each test run.
+
+After running `npm test`, open the generated report in your browser:
+
+```bash
+open jest_html_reporters.html
+```
+
+The report shows pass/fail status, execution times, and error details for every test suite. The report file and its attachments directory (`jest-html-reporters-attach/`) are ignored by git.
+
 ## Deployment to Vercel
 
 1. Connect repository to Vercel
@@ -139,7 +151,7 @@ Search products with filters, sorting, and pagination.
 
 ```typescript
 {
-  product: 'cars' | 'mobiles',
+  product: 'car' | 'mobile',
   columns: string[],
   conditions?: [{
     f: string,           // field name
@@ -210,8 +222,8 @@ Mobile device specifications including:
 This project is a migration from Spring Boot to Express.js:
 
 - **Database**: MySQL → Turso SQLite
-- **Runtime**: Java 21 → Node.js 18+
-- **Framework**: Spring Boot 3.5.7 → Express.js 4.18.2
+- **Runtime**: Java 21 → Node.js 20+
+- **Framework**: Spring Boot 3.x → Express.js 5.x
 - **Deployment**: Google Cloud Run → Vercel Functions
 - **Authentication**: Firebase Admin SDK (maintained)
 
