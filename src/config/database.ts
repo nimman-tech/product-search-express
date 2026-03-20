@@ -1,6 +1,9 @@
 /**
- * Turso SQLite Database Configuration
- * Uses @libsql/client for serverless SQLite with connection pooling
+ * SQLite / Turso Database Configuration
+ * Uses @libsql/client which supports:
+ *  - Remote Turso:  libsql://<db>.turso.io  (requires TURSO_AUTH_TOKEN)
+ *  - Local HTTP:    http://127.0.0.1:<port>  (local sqld / turso dev server)
+ *  - Local file:    file:<path>              (e.g. file:./local.db or file:/abs/path.db)
  */
 
 import { createClient, Client } from '@libsql/client';
@@ -8,24 +11,39 @@ import { createClient, Client } from '@libsql/client';
 let dbClient: Client | null = null;
 
 /**
- * Initialize database connection
+ * Returns true for URLs that point to a local SQLite instance and therefore
+ * do not require an auth token:
+ *  - file:  → embedded SQLite file  (file:./db.sqlite, file:/abs/path.db)
+ *  - http://127.0.0.1 → local sqld / turso dev server
+ */
+function isLocalUrl(url: string): boolean {
+  return url.startsWith('file:') || /^https?:\/\/127\.0\.0\.1(:\d+)?/.test(url);
+}
+
+/**
+ * Initialize database connection.
+ *
+ * Supported URL formats (via TURSO_CONNECTION_URL or SQLITE_DB_PATH):
+ *  - libsql://<db>.turso.io   – remote Turso  (TURSO_AUTH_TOKEN required)
+ *  - http://127.0.0.1:<port>  – local turso dev server  (no token needed)
+ *  - file:<path>              – embedded SQLite file     (no token needed)
  */
 export function initializeDatabase(): Client {
   if (dbClient) {
     return dbClient;
   }
 
-  const tursoUrl = process.env.TURSO_CONNECTION_URL;
-  const localDbUrl = process.env.SQLITE_DB_PATH;
+  const url = process.env.TURSO_CONNECTION_URL || process.env.SQLITE_DB_PATH;
   const token = process.env.TURSO_AUTH_TOKEN;
-  const url = tursoUrl || localDbUrl;
 
   if (!url) {
     throw new Error('TURSO_CONNECTION_URL or SQLITE_DB_PATH environment variable is not set');
   }
 
-  if (tursoUrl && !token) {
-    throw new Error('TURSO_AUTH_TOKEN environment variable is required for Turso');
+  if (!isLocalUrl(url) && !token) {
+    throw new Error(
+      'TURSO_AUTH_TOKEN environment variable is required for remote Turso connections'
+    );
   }
 
   try {
@@ -34,7 +52,8 @@ export function initializeDatabase(): Client {
       authToken: token ?? undefined,
     });
 
-    console.info('Database connection initialized successfully');
+    const connectionType = isLocalUrl(url) ? 'local SQLite' : 'remote Turso';
+    console.info(`Database connection initialized successfully (${connectionType}): ${url}`);
     return dbClient;
   } catch (error) {
     console.error('Failed to initialize database connection:', error);

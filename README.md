@@ -80,12 +80,12 @@ brew install tursodatabase/tap/turso
 turso dev --db-file ./sqlite/products-local.db
 ```
 
-This prints a local endpoint (usually `http://127.0.0.1:8000`).
+This prints a local endpoint (usually `http://127.0.0.1:8080`).
 
 3. Update `.env.local` to use the local endpoint:
 
 ```env
-TURSO_CONNECTION_URL=http://127.0.0.1:8000
+TURSO_CONNECTION_URL=http://127.0.0.1:8080
 ```
 
 4. Confirm the local server is running (optional):
