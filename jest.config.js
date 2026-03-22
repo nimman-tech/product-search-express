@@ -27,4 +27,15 @@ export default {
       },
     ],
   },
+  reporters: [
+    "default",
+    [
+      "jest-html-reporters",
+      {
+        publicPath: "./test-reports",
+        filename: "jest_html_reporters.html",
+        expand: true
+      }
+    ]
+  ],
 };

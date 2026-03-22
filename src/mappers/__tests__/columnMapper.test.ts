@@ -95,6 +95,18 @@ describe('CarColumnMapper', () => {
       expect(columns).toContain('j.a');
     });
 
+    it('should return only API shorthand keys, not DB column names', () => {
+      const columns = mapper.getAllColumns();
+      expect(columns).not.toContain('make');
+      expect(columns).not.toContain('engine_type');
+      expect(columns).not.toContain('feature_sunroof');
+    });
+
+    it('should have no duplicate entries', () => {
+      const columns = mapper.getAllColumns();
+      expect(columns.length).toBe(new Set(columns).size);
+    });
+
     it('should return consistent results', () => {
       const columns1 = mapper.getAllColumns();
       const columns2 = mapper.getAllColumns();
@@ -126,6 +138,27 @@ describe('CarColumnMapper', () => {
     it('should handle duplicate keys', () => {
       expect(mapper.validateColumns(['a', 'a'])).toBe(true);
     });
+
+    it('should accept the reserved "name" column', () => {
+      expect(mapper.validateColumns(['name'])).toBe(true);
+      expect(mapper.validateColumns(['name', 'a', 'b'])).toBe(true);
+    });
+
+    it('should accept raw DB column values as valid', () => {
+      // 'make' is a DB value for key 'a'; 'price' for 'e'
+      expect(mapper.validateColumns(['make'])).toBe(true);
+      expect(mapper.validateColumns(['price', 'model'])).toBe(true);
+    });
+
+    it('should reject empty-string column', () => {
+      expect(mapper.validateColumns([''])).toBe(false);
+    });
+
+    it('should reject case-mismatched key', () => {
+      // keys are lowercase only
+      expect(mapper.validateColumns(['A'])).toBe(false);
+      expect(mapper.validateColumns(['G.A'])).toBe(false);
+    });
   });
 });
 
@@ -137,6 +170,10 @@ describe('MobileColumnMapper', () => {
       expect(mapper.mapColumn('a')).toBe('make');
       expect(mapper.mapColumn('b')).toBe('model');
       expect(mapper.mapColumn('e')).toBe('price');
+    });
+
+    it('should map avatar key to make', () => {
+      expect(mapper.mapColumn('avatar')).toBe('make');
     });
 
     it('should map display shorthand keys', () => {
@@ -191,6 +228,19 @@ describe('MobileColumnMapper', () => {
       expect(columns).toContain('i.b');
       expect(columns).toContain('n.a');
     });
+
+    it('should return only API shorthand keys, not DB column names', () => {
+      const columns = mapper.getAllColumns();
+      // DB-side names must not appear in the key list
+      expect(columns).not.toContain('battery_capacity');
+      expect(columns).not.toContain('platform_os');
+      expect(columns).not.toContain('make');
+    });
+
+    it('should have no duplicate entries', () => {
+      const columns = mapper.getAllColumns();
+      expect(columns.length).toBe(new Set(columns).size);
+    });
   });
 
   describe('validateColumns', () => {
@@ -200,6 +250,20 @@ describe('MobileColumnMapper', () => {
 
     it('should reject car-specific shorthand keys not present in mobile map', () => {
       expect(mapper.validateColumns(['l.a', 'engine_type'])).toBe(false);
+    });
+
+    it('should accept the reserved "name" column', () => {
+      expect(mapper.validateColumns(['name'])).toBe(true);
+      expect(mapper.validateColumns(['name', 'l.b'])).toBe(true);
+    });
+
+    it('should accept raw DB column values as valid', () => {
+      expect(mapper.validateColumns(['battery_capacity'])).toBe(true);
+      expect(mapper.validateColumns(['platform_os', 'make'])).toBe(true);
+    });
+
+    it('should reject empty-string column', () => {
+      expect(mapper.validateColumns([''])).toBe(false);
     });
   });
 });
@@ -224,6 +288,12 @@ describe('ColumnMapperFactory', () => {
       expect(mapper1.mapColumn('a')).toBe(mapper2.mapColumn('a'));
     });
 
+    it('should return the same singleton instance on repeated calls', () => {
+      const mapper1 = ColumnMapperFactory.getMapper(ProductType.CAR);
+      const mapper2 = ColumnMapperFactory.getMapper(ProductType.CAR);
+      expect(mapper1).toBe(mapper2);
+    });
+
     it('should handle all supported product types', () => {
       const types = [ProductType.CAR, ProductType.MOBILE];
       types.forEach((type) => {
@@ -243,6 +313,16 @@ describe('ColumnMapperFactory', () => {
         const err = error as APIError;
         expect(err.code).toBe('INVALID_PRODUCT_TYPE');
         expect(err.details).toHaveProperty('supportedTypes');
+      }
+    });
+
+    it('should set HTTP 400 status on invalid product type error', () => {
+      try {
+        ColumnMapperFactory.getMapper('bad_type' as ProductType);
+        fail('Should have thrown error');
+      } catch (error: unknown) {
+        const err = error as APIError;
+        expect(err.statusCode).toBe(400);
       }
     });
   });

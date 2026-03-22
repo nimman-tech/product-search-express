@@ -13,6 +13,5 @@ coverage/
 firebase-credentials.json
 .env.production.local
 
-# jest-html-reporters output
-jest_html_reporters.html
-jest-html-reporters-attach/
+# jest reports
+test-reports/
