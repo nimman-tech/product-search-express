@@ -34,9 +34,11 @@ export interface ColumnMapper {
  */
 abstract class BaseColumnMapper implements ColumnMapper {
   protected columnMap: Map<string, string>;
+  private validColumns: Set<string>;
 
   constructor(columns: Record<string, string>) {
     this.columnMap = new Map(Object.entries(columns));
+    this.validColumns = new Set(['name', ...this.columnMap.keys(), ...this.columnMap.values()]);
   }
 
   mapColumn(apiColumnName: string): string {
@@ -48,7 +50,7 @@ abstract class BaseColumnMapper implements ColumnMapper {
   }
 
   validateColumns(apiColumnNames: string[]): boolean {
-    return apiColumnNames.every((col) => this.columnMap.has(col));
+    return apiColumnNames.every((col) => this.validColumns.has(col));
   }
 }
 
