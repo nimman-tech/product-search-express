@@ -185,7 +185,7 @@ In Vercel project settings:
    - `FIREBASE_SERVICE_ACCOUNT`: Your Firebase service account JSON
    - `TURSO_CONNECTION_URL`: Your Turso connection URL
    - `TURSO_AUTH_TOKEN`: Your Turso auth token
-   - `CORS_ORIGINS`: Your frontend domain (e.g., `https://nimman.co.in`)
+   - `CORS_ORIGINS`: Your frontend domain (e.g., `https://nimman.in`)
    - `NODE_ENV`: `production`
 
 **Important**: Ensure `CORS_ORIGINS` includes your frontend domain.

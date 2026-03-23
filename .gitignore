@@ -15,3 +15,5 @@ firebase-credentials.json
 
 # jest reports
 test-reports/
+.vercel
+.env.*

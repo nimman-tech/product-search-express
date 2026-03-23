@@ -1,19 +1,6 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "env": {
-    "FIREBASE_SERVICE_ACCOUNT": "@firebase_service_account",
-    "TURSO_CONNECTION_URL": "@turso_connection_url",
-    "TURSO_AUTH_TOKEN": "@turso_auth_token",
-    "CORS_ORIGINS": "@cors_origins",
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@3.0.0"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
