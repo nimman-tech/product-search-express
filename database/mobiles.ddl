@@ -1,7 +1,7 @@
 -- products.mobiles definition (SQLite)
 
 CREATE TABLE `mobiles` (
-    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `id` varchar(255) NOT NULL,
     `name` varchar(135) NOT NULL,
     `make` varchar(45) NOT NULL,
     `model` varchar(45) NOT NULL,
@@ -29,9 +29,10 @@ CREATE TABLE `mobiles` (
     `cameras_main_optical_zoom` integer NOT NULL,
     `cameras_main_digital_zoom` integer NOT NULL,
     `cameras_front_megapixel` integer NOT NULL,
+    `cameras_front_focal_length` integer NOT NULL,
     `cameras_front_type` varchar(45) NOT NULL,
     `cameras_front_aperture` varchar(45) NOT NULL,
-    `cameras_video_recording_capabilities` varchar(45) NOT NULL,
+    `connectivity_sim_count` integer NOT NULL,
     `features_face_unlock` integer NOT NULL DEFAULT 0,
     `features_fingerprint_sensor` integer NOT NULL DEFAULT 0,
     `features_always_on_display` integer NOT NULL DEFAULT 0,
@@ -61,13 +62,20 @@ CREATE TABLE `mobiles` (
     `dimensions_width` integer NOT NULL,
     `dimensions_thickness` integer NOT NULL,
     `dimensions_weight` integer NOT NULL,
+    `display_screen_to_body_ratio` integer NOT NULL,
+    `error_message` varchar(255) NOT NULL,
     `platform_os` varchar(45) NOT NULL,
     `platform_os_version` varchar(10) NOT NULL,
     `memory_ram` integer NOT NULL,
+    `mrp` integer NOT NULL,
     `memory_storage` integer NOT NULL,
     `memory_expandable` integer NOT NULL DEFAULT 0,
     `memory_storage_type` varchar(45) NOT NULL,
-    `connectivity_sim_count` integer NOT NULL,
+    `official_buy_url` varchar(45) NOT NULL,
+    `validation_status` varchar(45) NOT NULL,
+    `version` varchar(45) NOT NULL,
     `last_updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
     UNIQUE (`name`)
 );
+
