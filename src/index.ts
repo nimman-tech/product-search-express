@@ -47,14 +47,17 @@ app.use('/api/v1', v1Routes);
 app.use('/api', v1Routes);
 
 /**
- * Root Health check (for load balancers)
+ * Root and Health check (for load balancers)
  */
-app.get('/health', (req, res) => {
+const healthCheckHandler = (req: express.Request, res: express.Response) => {
   res.json({
     status: 'UP',
     version: '1.0.0', // Service version
   });
-});
+};
+
+app.get('/health', healthCheckHandler);
+app.get('/', healthCheckHandler);
 
 /**
  * 404 Handler
@@ -75,20 +78,22 @@ app.use((err: unknown, req: express.Request, res: Response, _next: express.NextF
   handleError(err, res);
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.info(`[INFO] Server starting on port ${PORT}`);
-  console.info(`[INFO] Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.info(`[INFO] Health check available at: http://localhost:${PORT}/api/health`);
-  console.info(
-    `[INFO] Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
-  );
-});
+// Start server only if not in a serverless environment (like Vercel)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.info(`[INFO] Server starting on port ${PORT}`);
+    console.info(`[INFO] Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.info(`[INFO] Health check available at: http://localhost:${PORT}/api/health`);
+    console.info(
+      `[INFO] Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
+    );
+  });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.info('SIGTERM received, shutting down gracefully...');
-  process.exit(0);
-});
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.info('SIGTERM received, shutting down gracefully...');
+    process.exit(0);
+  });
+}
 
 export default app;
