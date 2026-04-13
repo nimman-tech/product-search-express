@@ -17,3 +17,5 @@ firebase-credentials.json
 test-reports/
 .vercel
 .env.*
+sqlite/*.db-shm
+sqlite/*.db-wal

@@ -33,7 +33,8 @@ export function initializeDatabase(): Client {
     return dbClient;
   }
 
-  const url = process.env.TURSO_CONNECTION_URL || process.env.SQLITE_DB_PATH;
+  // Use local db if SQLITE_DB_PATH is set, otherwise use remote Turso
+  const url = process.env.SQLITE_DB_PATH || process.env.TURSO_CONNECTION_URL;
   const token = process.env.TURSO_AUTH_TOKEN;
 
   if (!url) {
