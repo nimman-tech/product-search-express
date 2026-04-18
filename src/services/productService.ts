@@ -51,13 +51,13 @@ function validateSearchRequest(req: SearchRequest): void {
 function buildWhereClause(
   conditions: Condition[] | undefined,
   mapper: ColumnMapper
-): { clause: string; params: (string | number | null)[] } {
+): { clause: string; params: (string | number | boolean | null)[] } {
   if (!conditions || conditions.length === 0) {
     return { clause: '', params: [] };
   }
 
   const parts: string[] = [];
-  const params: (string | number | null)[] = [];
+  const params: (string | number | boolean | null)[] = [];
 
   for (const condition of conditions) {
     const dbColumn = mapper.mapColumn(condition.f);
@@ -74,11 +74,11 @@ function buildWhereClause(
 
       const placeholders = condition.v.map(() => '?').join(',');
       parts.push(`${dbColumn} IN (${placeholders})`);
-      params.push(...(condition.v as (string | number)[]));
+      params.push(...(condition.v as (string | number | boolean)[]));
     } else {
       // Handle other operations
       parts.push(`${dbColumn} ${operation} ?`);
-      params.push(condition.v as string | number | null);
+      params.push(condition.v as string | number | boolean | null);
     }
   }
 
@@ -186,8 +186,8 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
       const values = request.columns.map((col) => {
         const dbCol = mapper.mapColumn(col);
         const val = row[dbCol];
-        return val === undefined ? null : val;
-      }) as (string | number | null)[];
+        return mapper.normalizeValue(col, val === undefined ? null : val);
+      }) as (string | number | boolean | null)[];
 
       return {
         i: row.id as string | number,

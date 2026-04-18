@@ -160,6 +160,24 @@ describe('CarColumnMapper', () => {
       expect(mapper.validateColumns(['G.A'])).toBe(false);
     });
   });
+
+  describe('boolean normalization', () => {
+    it('should identify boolean columns from shorthand keys', () => {
+      expect(mapper.isBooleanColumn('l.a')).toBe(true);
+      expect(mapper.isBooleanColumn('m.a')).toBe(true);
+      expect(mapper.isBooleanColumn('e')).toBe(false);
+    });
+
+    it('should identify boolean columns from raw DB column names', () => {
+      expect(mapper.isBooleanColumn('feature_sunroof')).toBe(true);
+      expect(mapper.isBooleanColumn('price')).toBe(false);
+    });
+
+    it('should normalize numeric boolean values', () => {
+      expect(mapper.normalizeValue('l.a', 1)).toBe(true);
+      expect(mapper.normalizeValue('l.a', 0)).toBe(false);
+    });
+  });
 });
 
 describe('MobileColumnMapper', () => {
@@ -264,6 +282,20 @@ describe('MobileColumnMapper', () => {
 
     it('should reject empty-string column', () => {
       expect(mapper.validateColumns([''])).toBe(false);
+    });
+  });
+
+  describe('boolean normalization', () => {
+    it('should identify mobile boolean columns', () => {
+      expect(mapper.isBooleanColumn('i.e')).toBe(true);
+      expect(mapper.isBooleanColumn('k.n')).toBe(true);
+      expect(mapper.isBooleanColumn('i.d')).toBe(false);
+    });
+
+    it('should normalize string boolean values', () => {
+      expect(mapper.normalizeValue('k.n', '1')).toBe(true);
+      expect(mapper.normalizeValue('k.n', '0')).toBe(false);
+      expect(mapper.normalizeValue('i.d', '1')).toBe('1');
     });
   });
 });

@@ -18,6 +18,8 @@ jest.mock('../../mappers/columnMapper.js', () => ({
   ColumnMapperFactory: {
     getMapper: jest.fn(() => ({
       mapColumn: jest.fn((col: string) => col),
+      isBooleanColumn: jest.fn(() => false),
+      normalizeValue: jest.fn((_col: string, value: unknown) => value),
       getAllColumns: jest.fn(() => ['id', 'brand', 'model', 'year', 'price']),
       validateColumns: jest.fn((_cols: string[]) => true),
     })),
@@ -36,6 +38,16 @@ const mockExecuteQueryOne = dbModule.executeQueryOne as jest.MockedFunction<
 const mockGetMapper = ColumnMapperFactory.getMapper as jest.MockedFunction<
   typeof ColumnMapperFactory.getMapper
 >;
+
+function createDefaultMapper() {
+  return {
+    mapColumn: jest.fn((col: string) => col),
+    isBooleanColumn: jest.fn(() => false),
+    normalizeValue: jest.fn((_col: string, value: unknown) => value),
+    getAllColumns: jest.fn(() => ['id', 'brand', 'model', 'year', 'price']),
+    validateColumns: jest.fn((_cols: string[]) => true),
+  };
+}
 
 describe('scanProduct - Request Validation', () => {
   beforeEach(() => {
@@ -126,6 +138,8 @@ describe('scanProduct - Request Validation', () => {
       // Mock getMapper to return a mapper that validates columns as false
       (mockGetMapper as jest.Mock).mockReturnValueOnce({
         mapColumn: jest.fn((col: string) => col),
+        isBooleanColumn: jest.fn(() => false),
+        normalizeValue: jest.fn((_col: string, value: unknown) => value),
         getAllColumns: jest.fn(() => ['id', 'brand', 'model']),
         validateColumns: jest.fn(() => false),
       });
@@ -142,6 +156,8 @@ describe('scanProduct - Request Validation', () => {
       // Mock getMapper to return a mapper that validates columns as false
       (mockGetMapper as jest.Mock).mockReturnValueOnce({
         mapColumn: jest.fn((col: string) => col),
+        isBooleanColumn: jest.fn(() => false),
+        normalizeValue: jest.fn((_col: string, value: unknown) => value),
         getAllColumns: jest.fn(() => ['id', 'brand', 'model']),
         validateColumns: jest.fn(() => false),
       });
@@ -248,7 +264,17 @@ describe('scanProduct - Request Validation', () => {
 });
 
 describe('scanProduct - Response Formatting', () => {
+  beforeEach(() => {
+    mockExecuteQuery.mockReset();
+    mockExecuteQueryOne.mockReset();
+    mockGetMapper.mockReset();
+    mockGetMapper.mockImplementation(() => createDefaultMapper());
+  });
+
   it('should return response with total and data properties', async () => {
+    mockExecuteQuery.mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 0 });
+
     const response = await scanProduct({
       product: ProductType.CAR,
       columns: ['brand'],
@@ -258,6 +284,44 @@ describe('scanProduct - Response Formatting', () => {
     expect(response).toHaveProperty('data');
     expect(typeof response.total).toBe('number');
     expect(Array.isArray(response.data)).toBe(true);
+  });
+
+  it('should normalize boolean-like database values before returning data', async () => {
+    mockExecuteQuery.mockResolvedValueOnce([
+      {
+        id: 1,
+        feature_sunroof: 1,
+        feature_wireless_charger: 0,
+      } as Record<string, unknown>,
+    ]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    (mockGetMapper as jest.Mock).mockReturnValueOnce({
+      mapColumn: jest.fn(
+        (col: string) =>
+          ({
+            'l.a': 'feature_sunroof',
+            'l.c': 'feature_wireless_charger',
+          })[col] ?? col
+      ),
+      isBooleanColumn: jest.fn((col: string) => ['l.a', 'l.c'].includes(col)),
+      normalizeValue: jest.fn((col: string, value: unknown) => {
+        if (['l.a', 'l.c'].includes(col)) {
+          return Boolean(value);
+        }
+        return value;
+      }),
+      getAllColumns: jest.fn(() => ['l.a', 'l.c']),
+      validateColumns: jest.fn(() => true),
+    });
+
+    const response = await scanProduct({
+      product: ProductType.CAR,
+      columns: ['l.a', 'l.c'],
+    });
+
+    expect(response.data).toHaveLength(1);
+    expect(response.data[0].v).toEqual([true, false]);
   });
 });
 
