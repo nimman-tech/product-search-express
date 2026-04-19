@@ -77,7 +77,7 @@ export function getDatabaseClient(): Client {
  */
 export async function executeQuery<T = unknown[]>(
   query: string,
-  params: (string | number | null)[] = []
+  params: (string | number | boolean | null)[] = []
 ): Promise<T[]> {
   try {
     const client = getDatabaseClient();
@@ -99,7 +99,7 @@ export async function executeQuery<T = unknown[]>(
  */
 export async function executeQueryOne<T = unknown>(
   query: string,
-  params: (string | number | null)[] = []
+  params: (string | number | boolean | null)[] = []
 ): Promise<T | null> {
   const results = await executeQuery<T>(query, params);
   return results.length > 0 ? results[0] : null;
@@ -110,7 +110,7 @@ export async function executeQueryOne<T = unknown>(
  */
 export async function executeQueryCount(
   query: string,
-  params: (string | number | null)[] = []
+  params: (string | number | boolean | null)[] = []
 ): Promise<number> {
   const result = await executeQueryOne<{ count: number }>(query, params);
   return result?.count ?? 0;

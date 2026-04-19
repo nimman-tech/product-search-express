@@ -55,13 +55,16 @@ export const SortOrderMap: Record<SortOrder, string> = {
   [SortOrder.D]: 'DESC',
 };
 
+export type ScalarValue = string | number | boolean | null;
+export type FilterValue = string | number | boolean;
+
 /**
  * Filter condition with field, operation, and value
  */
 export interface Condition {
   f: string; // Field name
   o: Operation; // Operation (E, EG, ES, S, G, IN)
-  v: string | number | (string | number)[]; // Value (can be array for IN operation)
+  v: FilterValue | FilterValue[]; // Value (can be array for IN operation)
 }
 
 /**
@@ -89,7 +92,7 @@ export interface SearchRequest {
  */
 export interface ProductItem {
   i: string | number; // Item ID
-  v: (string | number | null)[]; // Column values in requested order
+  v: ScalarValue[]; // Column values in requested order
 }
 
 /**
