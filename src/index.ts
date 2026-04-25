@@ -5,15 +5,17 @@
 
 import express, { Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
 import { initializeDatabase } from './config/database.js';
 import { getCorsConfig } from './config/cors.js';
 import { handleError } from './utils/errorHandler.js';
 
 // Load environment variables
-dotenv.config({ path: ['.env.local', '.env'], debug: true });
-
+if (!process.env.VERCEL) {
+  const dotenv = await import('dotenv');
+  dotenv.config({ path: ['.env.local', '.env'], debug: true });
+}
 // Initialize app
 const app = express();
 const PORT = process.env.PORT || 3000;
