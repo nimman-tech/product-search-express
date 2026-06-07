@@ -180,6 +180,8 @@ class MobileColumnMapper extends BaseColumnMapper {
         f: 'url',
         g: 'value_for_money',
         h: 'after_sales_service',
+        i: 'mrp',
+        j: 'official_buy_url',
         'i.a.a': 'battery_life_usage',
         'i.a.b': 'battery_life_standby',
         'i.a.c': 'battery_life_talk_time',

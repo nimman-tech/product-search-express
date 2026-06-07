@@ -1,0 +1,2 @@
+ALTER TABLE `mobiles` ADD COLUMN mrp decimal(10,2) DEFAULT NULL;
+ALTER TABLE `mobiles` ADD COLUMN official_buy_url VARCHAR(255) DEFAULT NULL;
