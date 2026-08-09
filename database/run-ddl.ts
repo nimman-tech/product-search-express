@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 async function runDdl() {
-  const ddlPath = path.resolve(process.cwd(), 'database/product_purchase_urls.ddl');
+  const ddlPath = path.resolve(process.cwd(), 'database/product_vendor_listings.ddl');
   const ddl = fs.readFileSync(ddlPath, 'utf-8');
   const statements = ddl.split(';').filter((s) => s.trim().length > 0);
   for (const s of statements) {

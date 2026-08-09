@@ -621,7 +621,7 @@ describe('scanProduct - Purchase URLs', () => {
     // Only the SELECT query should have been called, not the URLs query
     expect(mockExecuteQuery).toHaveBeenCalledTimes(1);
     expect(mockExecuteQuery).not.toHaveBeenCalledWith(
-      expect.stringContaining('product_purchase_urls'),
+      expect.stringContaining('product_vendor_listings'),
       expect.anything()
     );
   });
@@ -637,7 +637,7 @@ describe('scanProduct - Purchase URLs', () => {
     expect(mockExecuteQuery).toHaveBeenCalledTimes(2);
     expect(mockExecuteQuery).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining('product_purchase_urls'),
+      expect.stringContaining('product_vendor_listings'),
       ['car', '1']
     );
   });
@@ -652,7 +652,7 @@ describe('scanProduct - Purchase URLs', () => {
 
     expect(mockExecuteQuery).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining('product_purchase_urls'),
+      expect.stringContaining('product_vendor_listings'),
       ['bike', '10']
     );
   });
@@ -734,7 +734,7 @@ describe('scanProduct - Purchase URLs', () => {
     // Second call should pass product_type + both ids
     expect(mockExecuteQuery).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining('product_purchase_urls'),
+      expect.stringContaining('product_vendor_listings'),
       ['car', '10', '20']
     );
   });

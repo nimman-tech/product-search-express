@@ -88,11 +88,12 @@ export interface SearchRequest {
 }
 
 /**
- * Purchase URL for a product
+ * Vendor listing for a product (URL + optional price)
  */
-export interface PurchaseUrl {
+export interface VendorListing {
   vendor: string;
   url: string;
+  price?: number | null;
 }
 
 /**
@@ -101,7 +102,7 @@ export interface PurchaseUrl {
 export interface ProductItem {
   i: string | number; // Item ID
   v: ScalarValue[]; // Column values in requested order
-  u?: PurchaseUrl[]; // Purchase URLs
+  u?: VendorListing[]; // Vendor listings
 }
 
 /**
