@@ -5,6 +5,7 @@ A modern Express.js REST API for searching products across multiple categories (
 ## Features
 
 - **Dynamic Product Search**: Filter cars and mobiles by various specifications
+- **Automatic Year Filtering**: Configurable min launch year threshold (`year > 2020`) with category-level environment overrides
 - **Firebase Authentication**: Secure JWT-based authentication
 - **Flexible Filtering**: Support for multiple conditions (=, >=, <=, <, >, IN)
 - **Sorting & Pagination**: Order results and paginate through large datasets
@@ -23,7 +24,8 @@ src/
   ├── config/             # Configuration files
   │   ├── firebase.ts     # Firebase initialization
   │   ├── database.ts     # Turso database setup
-  │   └── cors.ts         # CORS configuration
+  │   ├── cors.ts         # CORS configuration
+  │   └── product.ts      # Launch year threshold configuration
   ├── middleware/         # Express middleware
   │   └── auth.ts         # Firebase authentication filter
   ├── services/           # Business logic
@@ -63,6 +65,7 @@ cp .env.example .env.local
    - Firebase service account JSON
    - Turso database URL and token (see **Local Turso Development** below)
    - CORS origins
+   - Product search launch year thresholds (`MIN_LAUNCH_YEAR`, `MIN_LAUNCH_YEAR_MOBILE`, `MIN_LAUNCH_YEAR_CAR`)
 
 ### Local Turso Development (Option A)
 
@@ -144,6 +147,8 @@ vercel deploy
 ### POST /api/products/scan
 
 Search products with filters, sorting, and pagination.
+
+> ℹ️ **Automatic Filtering**: All product queries automatically filter items launched after a minimum year threshold (category-specific `MIN_LAUNCH_YEAR_<CATEGORY>` -> `MIN_LAUNCH_YEAR` -> default `2020`).
 
 **Authentication**: Required (Firebase JWT)
 
