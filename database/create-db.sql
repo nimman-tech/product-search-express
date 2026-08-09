@@ -177,4 +177,23 @@ CREATE TABLE `mobiles` (
 
 -- Dump completed on 2025-06-16 22:22:03
 
+--
+-- Table structure for table `product_purchase_urls`
+--
+
+DROP TABLE IF EXISTS `product_purchase_urls`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `product_purchase_urls` (
+    `id` varchar(255) NOT NULL,
+    `product_id` integer NOT NULL,
+    `product_type` varchar(45) NOT NULL,
+    `vendor_name` varchar(100) NOT NULL,
+    `url` text NOT NULL,
+    `last_updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+
+CREATE INDEX idx_product_purchase_urls_product ON product_purchase_urls(product_id, product_type);
+/*!40101 SET character_set_client = @saved_cs_client */;
 

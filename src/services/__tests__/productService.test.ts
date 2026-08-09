@@ -287,13 +287,15 @@ describe('scanProduct - Response Formatting', () => {
   });
 
   it('should normalize boolean-like database values before returning data', async () => {
-    mockExecuteQuery.mockResolvedValueOnce([
-      {
-        id: 1,
-        feature_sunroof: 1,
-        feature_wireless_charger: 0,
-      } as Record<string, unknown>,
-    ]);
+    mockExecuteQuery
+      .mockResolvedValueOnce([
+        {
+          id: 1,
+          feature_sunroof: 1,
+          feature_wireless_charger: 0,
+        } as Record<string, unknown>,
+      ])
+      .mockResolvedValueOnce([]); // purchase URLs query
     mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
 
     (mockGetMapper as jest.Mock).mockReturnValueOnce({
@@ -599,5 +601,159 @@ describe('scanProduct - Integration Tests', () => {
     expect(response).toHaveProperty('data');
     expect(typeof response.total).toBe('number');
     expect(Array.isArray(response.data)).toBe(true);
+  });
+});
+
+describe('scanProduct - Purchase URLs', () => {
+  beforeEach(() => {
+    mockExecuteQuery.mockReset();
+    mockExecuteQueryOne.mockReset();
+    mockGetMapper.mockReset();
+    mockGetMapper.mockImplementation(() => createDefaultMapper());
+  });
+
+  it('should not query purchase URLs when results are empty', async () => {
+    mockExecuteQuery.mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 0 });
+
+    await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    // Only the SELECT query should have been called, not the URLs query
+    expect(mockExecuteQuery).toHaveBeenCalledTimes(1);
+    expect(mockExecuteQuery).not.toHaveBeenCalledWith(
+      expect.stringContaining('product_purchase_urls'),
+      expect.anything()
+    );
+  });
+
+  it('should query purchase URLs when results are non-empty', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([{ id: 1, brand: 'Toyota' } as Record<string, unknown>])
+      .mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    expect(mockExecuteQuery).toHaveBeenCalledTimes(2);
+    expect(mockExecuteQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('product_purchase_urls'),
+      ['car', '1']
+    );
+  });
+
+  it('should pass the correct product_type in the URL query', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([{ id: 10, brand: 'Honda' } as Record<string, unknown>])
+      .mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    await scanProduct({ product: ProductType.BIKE, columns: ['brand'] });
+
+    expect(mockExecuteQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('product_purchase_urls'),
+      ['bike', '10']
+    );
+  });
+
+  it('should attach purchase URLs to the matching product item', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([{ id: 42, brand: 'Samsung' } as Record<string, unknown>])
+      .mockResolvedValueOnce([
+        { product_id: '42', vendor: 'Amazon', url: 'https://amazon.com/p/42' },
+      ] as Record<string, unknown>[]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    const response = await scanProduct({ product: ProductType.MOBILE, columns: ['brand'] });
+
+    expect(response.data[0].u).toEqual([{ vendor: 'Amazon', url: 'https://amazon.com/p/42' }]);
+  });
+
+  it('should attach multiple vendor URLs to the same product item', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([{ id: 5, brand: 'BMW' } as Record<string, unknown>])
+      .mockResolvedValueOnce([
+        { product_id: '5', vendor: 'Vendor A', url: 'https://a.com/5' },
+        { product_id: '5', vendor: 'Vendor B', url: 'https://b.com/5' },
+      ] as Record<string, unknown>[]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    const response = await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    expect(response.data[0].u).toHaveLength(2);
+    expect(response.data[0].u).toEqual([
+      { vendor: 'Vendor A', url: 'https://a.com/5' },
+      { vendor: 'Vendor B', url: 'https://b.com/5' },
+    ]);
+  });
+
+  it('should not set u property when no purchase URLs exist for a product', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([{ id: 99, brand: 'Ford' } as Record<string, unknown>])
+      .mockResolvedValueOnce([]); // no URLs in DB
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 1 });
+
+    const response = await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    expect(response.data[0].u).toBeUndefined();
+  });
+
+  it('should attach URLs to correct items in a multi-row result set', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([
+        { id: 1, brand: 'Toyota' } as Record<string, unknown>,
+        { id: 2, brand: 'Honda' } as Record<string, unknown>,
+        { id: 3, brand: 'Suzuki' } as Record<string, unknown>,
+      ])
+      .mockResolvedValueOnce([
+        { product_id: '1', vendor: 'Shop1', url: 'https://shop1.com/1' },
+        { product_id: '3', vendor: 'Shop2', url: 'https://shop2.com/3' },
+      ] as Record<string, unknown>[]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 3 });
+
+    const response = await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    expect(response.data).toHaveLength(3);
+    expect(response.data[0].u).toEqual([{ vendor: 'Shop1', url: 'https://shop1.com/1' }]); // id=1
+    expect(response.data[1].u).toBeUndefined(); // id=2
+    expect(response.data[2].u).toEqual([{ vendor: 'Shop2', url: 'https://shop2.com/3' }]); // id=3
+  });
+
+  it('should include all product IDs as placeholders in the URL query', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([
+        { id: 10, brand: 'A' } as Record<string, unknown>,
+        { id: 20, brand: 'B' } as Record<string, unknown>,
+      ])
+      .mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 2 });
+
+    await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    // Second call should pass product_type + both ids
+    expect(mockExecuteQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('product_purchase_urls'),
+      ['car', '10', '20']
+    );
+  });
+
+  it('should include product_id IN clause covering all returned product IDs', async () => {
+    mockExecuteQuery
+      .mockResolvedValueOnce([
+        { id: 7, brand: 'X' } as Record<string, unknown>,
+        { id: 8, brand: 'Y' } as Record<string, unknown>,
+      ])
+      .mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 2 });
+
+    await scanProduct({ product: ProductType.CAR, columns: ['brand'] });
+
+    expect(mockExecuteQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.stringMatching(/product_id IN \(\?,\?\)/),
+      expect.anything()
+    );
   });
 });

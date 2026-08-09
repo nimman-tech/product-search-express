@@ -13,6 +13,7 @@ import {
   Operation,
   OperationMap,
   SortOrderMap,
+  PurchaseUrl,
 } from '../types/index.js';
 import { ColumnMapperFactory, ColumnMapper } from '../mappers/columnMapper.js';
 import { executeQuery, executeQueryOne } from '../config/database.js';
@@ -181,6 +182,34 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
 
     const total = countRaw?.count ?? 0;
 
+    // Fetch purchase URLs if we have results
+    const purchaseUrlsByProductId = new Map<string, PurchaseUrl[]>();
+
+    if (resultsRaw.length > 0) {
+      const productIds = resultsRaw.map((row) => String(row.id));
+      const placeholders = productIds.map(() => '?').join(',');
+
+      const urlsQuery = `
+        SELECT product_id, vendor_name as vendor, url 
+        FROM product_purchase_urls 
+        WHERE product_type = ? AND product_id IN (${placeholders})
+      `;
+
+      const urlParams = [request.product, ...productIds];
+      const urlsRaw = await executeQuery<{
+        product_id: string | number;
+        vendor: string;
+        url: string;
+      }>(urlsQuery, urlParams);
+
+      urlsRaw.forEach((row) => {
+        const idStr = String(row.product_id);
+        const urls = purchaseUrlsByProductId.get(idStr) || [];
+        urls.push({ vendor: row.vendor, url: row.url });
+        purchaseUrlsByProductId.set(idStr, urls);
+      });
+    }
+
     // Convert results to ProductItem format
     const data: ProductItem[] = resultsRaw.map((row) => {
       const values = request.columns.map((col) => {
@@ -189,10 +218,18 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
         return mapper.normalizeValue(col, val === undefined ? null : val);
       }) as (string | number | boolean | null)[];
 
-      return {
+      const productIdStr = String(row.id);
+      const productItem: ProductItem = {
         i: row.id as string | number,
         v: values,
       };
+
+      const urls = purchaseUrlsByProductId.get(productIdStr);
+      if (urls && urls.length > 0) {
+        productItem.u = urls;
+      }
+
+      return productItem;
     });
 
     return {

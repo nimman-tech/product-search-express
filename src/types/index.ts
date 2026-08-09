@@ -88,11 +88,20 @@ export interface SearchRequest {
 }
 
 /**
+ * Purchase URL for a product
+ */
+export interface PurchaseUrl {
+  vendor: string;
+  url: string;
+}
+
+/**
  * Single product item in search results
  */
 export interface ProductItem {
   i: string | number; // Item ID
   v: ScalarValue[]; // Column values in requested order
+  u?: PurchaseUrl[]; // Purchase URLs
 }
 
 /**
