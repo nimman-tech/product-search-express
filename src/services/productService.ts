@@ -18,6 +18,7 @@ import {
 import { ColumnMapperFactory, ColumnMapper } from '../mappers/columnMapper.js';
 import { executeQuery, executeQueryOne } from '../config/database.js';
 import { APIError, createValidationError, createDatabaseError } from '../utils/errorHandler.js';
+import { getMinLaunchYear } from '../config/product.js';
 
 /**
  * Validate search request
@@ -146,9 +147,20 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
     // Map columns from API names to DB names
     const dbColumns = request.columns.map((col) => mapper.mapColumn(col));
 
+    // Build conditions including automatic min launch year threshold
+    const minLaunchYear = getMinLaunchYear(request.product);
+    const effectiveConditions: Condition[] = [
+      {
+        f: 'year',
+        o: Operation.G,
+        v: minLaunchYear,
+      },
+      ...(request.conditions || []),
+    ];
+
     // Build WHERE clause
     const { clause: whereClause, params: whereParams } = buildWhereClause(
-      request.conditions,
+      effectiveConditions,
       mapper
     );
 

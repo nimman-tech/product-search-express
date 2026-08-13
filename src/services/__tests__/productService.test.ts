@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 /**
  * Product Service Unit Tests
  * Testing search validation, query building, and response formatting
@@ -343,7 +345,10 @@ describe('scanProduct - Conditions Handling', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('FROM cars'), []);
+    expect(mockExecuteQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE year > ?'),
+      [2020]
+    );
   });
 
   it('should execute with single condition', async () => {
@@ -494,7 +499,9 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), []);
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), [
+      expect.any(Number),
+    ]);
   });
 
   it('should execute with multiple sorts', async () => {
@@ -518,7 +525,9 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), []);
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ORDER BY'), [
+      expect.any(Number),
+    ]);
   });
 
   it('should handle ascending sort', async () => {
@@ -538,7 +547,9 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ASC'), []);
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('ASC'), [
+      expect.any(Number),
+    ]);
   });
 
   it('should handle descending sort', async () => {
@@ -558,7 +569,9 @@ describe('scanProduct - Sorting', () => {
 
     await scanProduct(request);
 
-    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('DESC'), []);
+    expect(mockExecuteQuery).toHaveBeenCalledWith(expect.stringContaining('DESC'), [
+      expect.any(Number),
+    ]);
   });
 });
 
@@ -604,6 +617,52 @@ describe('scanProduct - Integration Tests', () => {
   });
 });
 
+describe('scanProduct - Automatic Launch Year Filter', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it('should automatically append default year > 2020 condition', async () => {
+    delete process.env.MIN_LAUNCH_YEAR;
+    delete process.env.MIN_LAUNCH_YEAR_CAR;
+    mockExecuteQuery.mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 0 });
+
+    await scanProduct({
+      product: ProductType.CAR,
+      columns: ['brand'],
+    });
+
+    expect(mockExecuteQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE year > ?'),
+      [2020]
+    );
+  });
+
+  it('should use category-specific MIN_LAUNCH_YEAR_MOBILE when configured', async () => {
+    process.env.MIN_LAUNCH_YEAR = '2019';
+    process.env.MIN_LAUNCH_YEAR_MOBILE = '2022';
+    mockExecuteQuery.mockResolvedValueOnce([]);
+    mockExecuteQueryOne.mockResolvedValueOnce({ count: 0 });
+
+    await scanProduct({
+      product: ProductType.MOBILE,
+      columns: ['brand'],
+    });
+
+    expect(mockExecuteQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE year > ?'),
+      [2022]
+    );
+  });
+});
 describe('scanProduct - Purchase URLs', () => {
   beforeEach(() => {
     mockExecuteQuery.mockReset();
