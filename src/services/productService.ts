@@ -13,6 +13,7 @@ import {
   Operation,
   OperationMap,
   SortOrderMap,
+  VendorListing,
 } from '../types/index.js';
 import { ColumnMapperFactory, ColumnMapper } from '../mappers/columnMapper.js';
 import { executeQuery, executeQueryOne } from '../config/database.js';
@@ -193,6 +194,35 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
 
     const total = countRaw?.count ?? 0;
 
+    // Fetch vendor listings if we have results
+    const vendorListingsByProductId = new Map<string, VendorListing[]>();
+
+    if (resultsRaw.length > 0) {
+      const productIds = resultsRaw.map((row) => String(row.id));
+      const placeholders = productIds.map(() => '?').join(',');
+
+      const listingsQuery = `
+        SELECT product_id, vendor_name as vendor, url, price
+        FROM product_vendor_listings
+        WHERE product_type = ? AND product_id IN (${placeholders})
+      `;
+
+      const urlParams = [request.product, ...productIds];
+      const listingsRaw = await executeQuery<{
+        product_id: string | number;
+        vendor: string;
+        url: string;
+        price: number | null;
+      }>(listingsQuery, urlParams);
+
+      listingsRaw.forEach((row) => {
+        const idStr = String(row.product_id);
+        const listings = vendorListingsByProductId.get(idStr) || [];
+        listings.push({ vendor: row.vendor, url: row.url, price: row.price ?? undefined });
+        vendorListingsByProductId.set(idStr, listings);
+      });
+    }
+
     // Convert results to ProductItem format
     const data: ProductItem[] = resultsRaw.map((row) => {
       const values = request.columns.map((col) => {
@@ -201,10 +231,18 @@ export async function scanProduct(request: SearchRequest): Promise<SearchRespons
         return mapper.normalizeValue(col, val === undefined ? null : val);
       }) as (string | number | boolean | null)[];
 
-      return {
+      const productIdStr = String(row.id);
+      const productItem: ProductItem = {
         i: row.id as string | number,
         v: values,
       };
+
+      const listings = vendorListingsByProductId.get(productIdStr);
+      if (listings && listings.length > 0) {
+        productItem.u = listings;
+      }
+
+      return productItem;
     });
 
     return {

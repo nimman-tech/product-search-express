@@ -88,11 +88,21 @@ export interface SearchRequest {
 }
 
 /**
+ * Vendor listing for a product (URL + optional price)
+ */
+export interface VendorListing {
+  vendor: string;
+  url: string;
+  price?: number | null;
+}
+
+/**
  * Single product item in search results
  */
 export interface ProductItem {
   i: string | number; // Item ID
   v: ScalarValue[]; // Column values in requested order
+  u?: VendorListing[]; // Vendor listings
 }
 
 /**
