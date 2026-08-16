@@ -1,4 +1,23 @@
+/// <reference types="node" />
+
+import dotenv from 'dotenv';
 import { executeQuery } from '../src/config/database.js';
+
+dotenv.config({ path: ['.env.local', '.env'] });
+
+/**
+ * Derive a per-vendor price from the product's base price by applying a
+ * small random variance, so different vendors don't all show an identical
+ * price. Returns null when the base price is missing/invalid.
+ */
+function vendorPrice(basePrice: unknown, varianceRatio: number): number | null {
+  const parsed = Number(basePrice);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  const variance = 1 + (Math.random() * 2 - 1) * varianceRatio;
+  return Math.round((parsed * variance) / 10) * 10;
+}
 
 async function seedVendorListings() {
   console.log('Seeding product_vendor_listings...');
@@ -8,10 +27,11 @@ async function seedVendorListings() {
     await executeQuery('DELETE FROM product_vendor_listings', []);
 
     // Seed mobiles
-    const mobiles = await executeQuery<{ id: number | string; official_buy_url: string }>(
-      'SELECT id, official_buy_url FROM mobiles',
-      []
-    );
+    const mobiles = await executeQuery<{
+      id: number | string;
+      official_buy_url: string;
+      price: number | string | null;
+    }>('SELECT id, official_buy_url, price FROM mobiles', []);
     for (const mobile of mobiles) {
       const listings = [];
       const mobileIdStr = String(mobile.id);
@@ -24,7 +44,7 @@ async function seedVendorListings() {
           product_type: 'mobile',
           vendor_name: 'Official Store',
           url: mobile.official_buy_url,
-          price: null,
+          price: vendorPrice(mobile.price, 0),
         });
       }
 
@@ -43,7 +63,7 @@ async function seedVendorListings() {
         product_type: 'mobile',
         vendor_name: 'Amazon',
         url: `https://amazon.in/s?k=${mobileIdStr}`,
-        price: null,
+        price: vendorPrice(mobile.price, 0.05),
       });
 
       for (const listing of listings) {
@@ -62,10 +82,11 @@ async function seedVendorListings() {
     }
 
     // Seed cars
-    const cars = await executeQuery<{ id: number | string; url: string }>(
-      'SELECT id, url FROM cars',
-      []
-    );
+    const cars = await executeQuery<{
+      id: number | string;
+      url: string;
+      price: number | string | null;
+    }>('SELECT id, url, price FROM cars', []);
     for (const car of cars) {
       const listings = [];
       const carIdStr = String(car.id);
@@ -78,7 +99,7 @@ async function seedVendorListings() {
           product_type: 'car',
           vendor_name: 'Official Website',
           url: car.url,
-          price: null,
+          price: vendorPrice(car.price, 0),
         });
       }
 
@@ -89,7 +110,7 @@ async function seedVendorListings() {
         product_type: 'car',
         vendor_name: 'CarWale',
         url: `https://carwale.com/search?q=${carIdStr}`,
-        price: null,
+        price: vendorPrice(car.price, 0.05),
       });
 
       for (const listing of listings) {
