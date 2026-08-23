@@ -1,6 +1,11 @@
+/// <reference types="node" />
+
+import dotenv from 'dotenv';
 import { executeQuery } from '../src/config/database.js';
 import * as fs from 'fs';
 import * as path from 'path';
+
+dotenv.config({ path: ['.env.local', '.env'] });
 
 async function runDdl() {
   const ddlPath = path.resolve(process.cwd(), 'database/product_vendor_listings.ddl');
