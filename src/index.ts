@@ -35,7 +35,7 @@ try {
 }
 
 import v1Routes from './routes/v1/index.js';
-
+import v2Routes from './routes/v2/index.js';
 /**
  * Mount API Routes
  */
@@ -43,10 +43,10 @@ import v1Routes from './routes/v1/index.js';
 app.use('/api/v1', v1Routes);
 
 // Explicit V2 routes. Its same as v1 for now. But keep the structure for future
-// app.use('/api/v2', v2Routes);
+app.use('/api/v2', v2Routes);
 
 // Default unversioned /api/* routes map to the latest (V2)
-app.use('/api', v1Routes);
+app.use('/api', v2Routes);
 
 /**
  * Root and Health check (for load balancers)
@@ -88,6 +88,9 @@ if (!process.env.VERCEL) {
     console.info(`[INFO] Health check available at: http://localhost:${PORT}/api/health`);
     console.info(
       `[INFO] Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
+    );
+    console.info(
+      `[INFO] Product redirect endpoint available at: GET http://localhost:${PORT}/api/redirect`
     );
   });
 
