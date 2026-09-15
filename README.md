@@ -1,271 +1,206 @@
 # Product Search - Express.js + Vercel
 
-A modern Express.js REST API for searching products across multiple categories (cars, mobiles), migrated from Spring Boot. Designed for serverless deployment on Vercel with Turso Cloud SQLite backend.
+A modern Express.js REST API for searching products across multiple categories (cars, mobiles), vendor listing lookups, affiliate link monetization/redirection, and versioned database migrations. Designed for serverless deployment on Vercel with Turso Cloud SQLite backend.
+
+---
 
 ## Features
 
-- **Dynamic Product Search**: Filter cars and mobiles by various specifications
-- **Automatic Year Filtering**: Configurable min launch year threshold (`year > 2020`) with category-level environment overrides
-- **Firebase Authentication**: Secure JWT-based authentication
-- **Flexible Filtering**: Support for multiple conditions (=, >=, <=, <, >, IN)
-- **Sorting & Pagination**: Order results and paginate through large datasets
-- **Serverless Deployment**: Ready for Vercel Functions
-- **CORS Enabled**: Configured for Angular frontend integration
-- **Production Ready**: Comprehensive error handling and validation
+- **Dynamic Product Search**: Filter and search cars and mobiles across extensive technical specifications.
+- **Automatic Year Filtering**: Configurable minimum launch year threshold (`year >= 2020`) with category-level environment overrides.
+- **Vendor Listings & Purchase Links**: Multi-vendor product pricing and links (Official, Amazon, Flipkart, etc.).
+- **Affiliate Monetization & Redirects**: Transparent redirect service with Cuelinks affiliate wrapping and click tracking (`/api/redirect`).
+- **Automated Database Migrations**: Versioned, sequential SQL migrations executed automatically on deployment builds.
+- **Firebase Authentication**: Secure JWT-based authentication for product search endpoints.
+- **Flexible Querying**: Multi-field condition support (`=`, `>=`, `<=`, `<`, `>`, `IN`), ordering, and pagination.
+- **Serverless Ready**: Fully configured for Vercel Functions and local development.
+
+---
 
 ## Project Structure
 
 ```
-src/
-  ├── api/                 # Vercel Functions (endpoints)
-  │   ├── health.ts       # GET /api/health
-  │   └── products/
-  │       └── scan.ts     # POST /api/products/scan
-  ├── config/             # Configuration files
-  │   ├── firebase.ts     # Firebase initialization
-  │   ├── database.ts     # Turso database setup
-  │   ├── cors.ts         # CORS configuration
-  │   └── product.ts      # Launch year threshold configuration
-  ├── middleware/         # Express middleware
-  │   └── auth.ts         # Firebase authentication filter
-  ├── services/           # Business logic
-  │   └── productService.ts  # Product search service
-  ├── mappers/            # Column name mapping
-  │   ├── columnMapper.ts
-  │   └── columnMapperFactory.ts
-  ├── types/              # TypeScript interfaces
-  │   └── index.ts        # API models
-  ├── utils/              # Utility functions
-  │   └── errorHandler.ts # Error handling
-  └── index.ts            # Express app initialization (dev)
+product-search-express/
+├── database/
+│   ├── migrations/             # Versioned SQL migration scripts (0001 - 0006)
+│   └── seed-product-vendor-listings.ts  # Vendor listing seeder
+├── src/
+│   ├── api/                    # Vercel Serverless Function entrypoints
+│   ├── config/                 # Configuration (database, firebase, cors, product, redirect)
+│   ├── db/                     # Migration engine & CLI runner
+│   │   ├── migrator.ts         # Core migration logic & checksum validation
+│   │   └── cli.ts              # CLI interface
+│   ├── middleware/             # Express middlewares (auth, validation)
+│   ├── routes/                 # Express route handlers (products, redirect, health)
+│   ├── services/               # Business logic services (productService, redirectService)
+│   ├── mappers/                # Column name mappings and value normalizers
+│   ├── types/                  # TypeScript interfaces & API models
+│   ├── utils/                  # Utility helpers & centralized error handling
+│   └── index.ts                # Express application initialization
+├── api/                        # Vercel entrypoint
+├── test-reports/               # Jest HTML test reports
+└── vercel.json                 # Vercel deployment configuration
 ```
+
+---
 
 ## Prerequisites
 
-- Node.js 20+
-- npm or yarn
-- Turso Cloud account (for database)
-- Firebase project with service account
+- **Node.js**: 20.19.0 or higher
+- **npm**: 10.0.0 or higher
+- **Turso Cloud account** (or local SQLite)
+- **Firebase Project** (with Service Account credentials)
 
-## Installation
+---
 
-```bash
-npm install
-```
+## Installation & Setup
 
-## Environment Setup
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-1. Copy `.env.example` to `.env.local`:
+2. **Configure environment variables:**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Edit `.env.local` with your Turso credentials, Firebase service account, and CORS origins.
 
-```bash
-cp .env.example .env.local
-```
+3. **Run database migrations:**
+   ```bash
+   npm run db:migrate
+   ```
 
-2. Fill in your environment variables:
-   - Firebase service account JSON
-   - Turso database URL and token (see **Local Turso Development** below)
-   - CORS origins
-   - Product search launch year thresholds (`MIN_LAUNCH_YEAR`, `MIN_LAUNCH_YEAR_MOBILE`, `MIN_LAUNCH_YEAR_CAR`)
+4. **Start local development server:**
+   ```bash
+   npm run dev
+   ```
+   The server starts at `http://localhost:3000`.
 
-### Local Turso Development (Option A)
+---
 
-For local development without syncing to the Turso cloud, run a local Turso/libsql server and point the app to it.
+## Database Upgrade & Migration Strategy on Deployment
 
-1. Install the Turso CLI (macOS):
+Database schema changes across local, staging, and production environments follow an industry-standard **Versioned Evolutionary Database Migration** strategy.
 
-```bash
-brew install tursodatabase/tap/turso
-```
+### Core Architecture
 
-2. Start a local Turso server:
+1. **Versioned SQL Scripts (`database/migrations/`)**:
+   - Numbered, sequential SQL migration files (e.g. `0001_create_versions.sql`, `0002_create_cars.sql`, `0006_add_performance_indexes.sql`).
+   - All migrations are executed atomically inside write transactions.
 
-```bash
-turso dev --db-file ./sqlite/products-local.db
-```
+2. **State Tracking (`_schema_migrations` Table)**:
+   - Tracks executed migrations with `id`, `name`, `checksum`, and `applied_at`.
+   - Uses SHA-256 checksums to verify integrity and detect tampering of previously applied migrations.
 
-This prints a local endpoint (usually `http://127.0.0.1:8080`).
+3. **Auto-Baselining for Existing Databases**:
+   - On first run against an existing database, the migrator automatically detects legacy tables and records baseline migrations without throwing duplicate execution errors.
 
-3. Update `.env.local` to use the local endpoint:
+4. **Automated Pre-Deploy / Build Execution**:
+   - `npm run vercel-build` automatically executes `npm run db:migrate && tsc`.
+   - Migrations are applied in the release phase before the compiled application serves traffic.
 
-```env
-TURSO_CONNECTION_URL=http://127.0.0.1:8080
-```
+---
 
-4. Confirm the local server is running (optional):
+### Migration CLI Commands
 
-```bash
-turso local status
-```
+| Command | Description |
+| :--- | :--- |
+| `npm run db:migrate` | Apply all pending migrations sequentially inside write transactions. |
+| `npm run db:migrate:status` | Display a formatted status table of applied and pending migrations. |
+| `npm run db:migrate:baseline <name \| --all>` | Mark migration(s) as applied without running SQL (for baseline syncing). |
+| `npm run db:migrate:create <description>` | Scaffold a new sequential migration template file. |
 
-> ✅ The app will connect locally and will not sync to Turso cloud unless you explicitly run `turso sync`.
-
-## Development
-
-```bash
-npm run dev
-```
-
-Server runs on `http://localhost:3000`
-
-## Building
-
-```bash
-npm run build
-```
-
-## Testing
-
-```bash
-npm test
-npm run test:watch
-```
-
-### HTML Test Report
-
-This project uses [`jest-html-reporters`](https://github.com/Hazyzh/jest-html-reporters) to generate a visual HTML report after each test run.
-
-After running `npm test`, open the generated report in your browser:
-
-```bash
-open jest_html_reporters.html
-```
-
-The report shows pass/fail status, execution times, and error details for every test suite. The report file and its attachments directory (`jest-html-reporters-attach/`) are ignored by git.
-
-## Deployment to Vercel
-
-1. Connect repository to Vercel
-2. Set environment variables in Vercel project settings
-3. Deploy:
-
-```bash
-vercel deploy
-```
+---
 
 ## API Endpoints
 
-### POST /api/products/scan
+### 1. POST `/api/products/scan`
+Search products with specification filters, sorting, and pagination.
 
-Search products with filters, sorting, and pagination.
+- **Auth**: Required (`Authorization: Bearer <Firebase_JWT>`)
+- **Request Body**:
+  ```json
+  {
+    "product": "mobile",
+    "columns": ["name", "brand", "price", "ram", "storage"],
+    "conditions": [
+      { "f": "ram", "o": "EG", "v": 8 },
+      { "f": "price", "o": "ES", "v": 40000 }
+    ],
+    "sort": [{ "sortBy": "price", "order": "ASC" }],
+    "limit": 20,
+    "offset": 0
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "total": 15,
+    "data": [
+      {
+        "i": "mob-123",
+        "v": ["Galaxy S24", "Samsung", 39999, 8, 128],
+        "u": [
+          { "vendor": "Official", "url": "https://samsung.com/...", "price": 39999 },
+          { "vendor": "Amazon", "url": "https://amazon.in/...", "price": 38999 }
+        ]
+      }
+    ]
+  }
+  ```
 
-> ℹ️ **Automatic Filtering**: All product queries automatically filter items launched after a minimum year threshold (category-specific `MIN_LAUNCH_YEAR_<CATEGORY>` -> `MIN_LAUNCH_YEAR` -> default `2020`).
+### 2. GET `/api/redirect`
+Redirects user to monetized vendor URLs and logs click analytics.
 
-**Authentication**: Required (Firebase JWT)
+- **Query Parameters**:
+  - `url` *(required)*: Destination product URL
+  - `productId` *(optional)*: Product ID
+  - `productType` *(optional)*: `car` | `mobile`
+  - `vendor` *(optional)*: Merchant vendor name
+  - `subid` *(optional)*: Affiliate sub-tracking ID
 
-**Request**:
-
-```typescript
-{
-  product: 'car' | 'mobile',
-  columns: string[],
-  conditions?: [{
-    f: string,           // field name
-    o: 'E' | 'EG' | 'ES' | 'S' | 'G' | 'IN',  // operation
-    v: string | number | string[]
-  }],
-  sort?: [{
-    sortBy: string,
-    order: 'ASC' | 'DESC'
-  }],
-  limit?: number,        // max 200
-  offset?: number
-}
-```
-
-**Response**:
-
-```typescript
-{
-  total: number,
-  data: [{
-    i: string | number,  // item ID
-    v: (string | number)[]  // column values
-  }]
-}
-```
-
-### GET /api/health
-
+### 3. GET `/api/health`
 Health check endpoint.
+- **Response**: `{ "status": "UP", "version": "1.0.0" }`
 
-**Authentication**: Not required
+---
 
-**Response**:
+## Testing & Quality
 
-```typescript
-{
-  status: 'UP',
-  version: '1.0.0'
-}
-```
+- **Run unit test suite**:
+  ```bash
+  npm test
+  ```
+- **Watch mode**:
+  ```bash
+  npm run test:watch
+  ```
+- **Linting & Formatting**:
+  ```bash
+  npm run lint
+  npm run format
+  ```
 
-## Database Schema
+### HTML Test Report
+After running tests, view the visual test report in `test-reports/jest_html_reporters.html`.
 
-### cars table
+---
 
-Automotive specifications including:
+## Deployment to Vercel
 
-- Basic: brand, model, year, price
-- Engine: power, torque, displacement
-- Transmission: type, gearbox
-- Features: seats, airbags, sunroof, etc.
-- Safety, Fuel, Infotainment, Aesthetics columns
+1. Push your changes to your Git repository.
+2. In Vercel Project Settings, add all production Environment Variables:
+   - `FIREBASE_SERVICE_ACCOUNT`
+   - `TURSO_CONNECTION_URL`
+   - `TURSO_AUTH_TOKEN`
+   - `CORS_ORIGINS`
+   - `ALLOWED_MERCHANT_DOMAINS`
+   - `CUELINKS_API_KEY`
+   - `NODE_ENV=production`
+3. Build command: `npm run vercel-build` (triggers `npm run db:migrate && tsc`).
 
-### mobiles table
-
-Mobile device specifications including:
-
-- Basic: brand, model, price, release_year
-- Display: screen_size, resolution, refresh_rate
-- Camera: rear_mp, front_mp, video_recording
-- Battery: capacity, charging_speed
-- Memory: ram, storage
-- Connectivity: 5g, nfc, etc.
-
-## Migration Notes
-
-This project is a migration from Spring Boot to Express.js:
-
-- **Database**: MySQL → Turso SQLite
-- **Runtime**: Java 21 → Node.js 20+
-- **Framework**: Spring Boot 3.x → Express.js 5.x
-- **Deployment**: Google Cloud Run → Vercel Functions
-- **Authentication**: Firebase Admin SDK (maintained)
-
-## Security Considerations
-
-- Firebase JWT validation required for all endpoints except `/api/health`
-- CORS restricted to configured origins
-- Parameterized queries prevent SQL injection
-- Environment variables for sensitive credentials
-- Request validation and error handling for invalid inputs
-
-## Performance
-
-- Turso SQLite optimized for serverless: low latency, minimal cold starts
-- Connection pooling for database efficiency
-- Target response time: <500ms for typical searches
-- Supports concurrent requests via Vercel Function scaling
-
-## Troubleshooting
-
-### Database Connection Issues
-
-- Verify `TURSO_CONNECTION_URL` and `TURSO_AUTH_TOKEN` are correct
-- Check Turso dashboard for database status
-- Ensure tables (cars, mobiles) exist with correct schema
-
-### Firebase Authentication Errors
-
-- Validate Firebase service account JSON format
-- Verify project ID matches Firebase console
-- Check token expiration and claims
-
-### CORS Errors
-
-- Confirm origin is in `CORS_ORIGINS` comma-separated list
-- Verify deployment origin exactly matches configured origin
-- Check browser console for specific error messages
+---
 
 ## License
 

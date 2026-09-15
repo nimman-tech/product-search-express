@@ -1,6 +1,7 @@
--- products.cars definition
+-- Migration: 0002_create_cars.sql
+-- Description: Create cars table
 
-CREATE TABLE cars (
+CREATE TABLE IF NOT EXISTS cars (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `make` varchar(135) NOT NULL,
@@ -9,6 +10,8 @@ CREATE TABLE cars (
   `price` REAL NOT NULL,
   `seats` INTEGER NOT NULL,
   `year` INTEGER NOT NULL,
+  `url` varchar(255),
+  `mrp` integer NOT NULL,
   `body_type` varchar(45) NOT NULL,
   `body_length` INTEGER NOT NULL,
   `body_width` INTEGER NOT NULL,
@@ -46,12 +49,9 @@ CREATE TABLE cars (
   `expense_insurance` INTEGER NOT NULL,
   `expense_service` INTEGER NOT NULL,
   `expense_service_frequency` INTEGER NOT NULL,
-  `url` varchar(255),
-  `mrp` integer NOT NULL,
-  `last_updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `validation_status` varchar(45) NOT NULL,
   `version` varchar(45) NOT NULL,
+  `last_updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE (name)
 );
-

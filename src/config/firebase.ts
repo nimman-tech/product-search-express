@@ -3,6 +3,7 @@
  */
 
 import admin from 'firebase-admin';
+import { logger } from '../utils/logger.js';
 
 let firebaseInitialized = false;
 
@@ -34,9 +35,9 @@ export function initializeFirebase(): void {
     });
 
     firebaseInitialized = true;
-    console.info('Firebase Admin SDK initialized successfully');
+    logger.info('Firebase Admin SDK initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize Firebase Admin SDK:', error);
+    logger.error('Failed to initialize Firebase Admin SDK:', error);
     throw error;
   }
 }

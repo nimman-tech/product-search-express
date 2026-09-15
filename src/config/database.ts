@@ -7,6 +7,7 @@
  */
 
 import { createClient, Client } from '@libsql/client';
+import { logger } from '../utils/logger.js';
 
 let dbClient: Client | null = null;
 
@@ -41,6 +42,7 @@ export function initializeDatabase(): Client {
     throw new Error('TURSO_CONNECTION_URL or SQLITE_DB_PATH environment variable is not set');
   }
 
+  // Remote Turso URLs require an auth token
   if (!isLocalUrl(url) && !token) {
     throw new Error(
       'TURSO_AUTH_TOKEN environment variable is required for remote Turso connections'
@@ -54,10 +56,10 @@ export function initializeDatabase(): Client {
     });
 
     const connectionType = isLocalUrl(url) ? 'local SQLite' : 'remote Turso';
-    console.info(`Database connection initialized successfully (${connectionType}): ${url}`);
+    logger.info(`Database connection initialized successfully (${connectionType}): ${url}`);
     return dbClient;
   } catch (error) {
-    console.error('Failed to initialize database connection:', error);
+    logger.error('Failed to initialize database connection:', error);
     throw error;
   }
 }
@@ -89,7 +91,7 @@ export async function executeQuery<T = unknown[]>(
     // Cast result rows to desired type
     return result.rows as T[];
   } catch (error) {
-    console.error('Database query failed:', { query, params, error });
+    logger.error('Database query failed:', { query, params, error });
     throw error;
   }
 }
@@ -124,9 +126,9 @@ export async function closeDatabase(): Promise<void> {
     try {
       await (dbClient as never as { close: () => Promise<void> }).close?.();
       dbClient = null;
-      console.info('Database connection closed');
+      logger.info('Database connection closed');
     } catch (error) {
-      console.error('Error closing database connection:', error);
+      logger.error('Error closing database connection:', error);
     }
   }
 }

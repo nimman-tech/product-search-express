@@ -9,13 +9,12 @@ import cors from 'cors';
 import { initializeFirebase } from './config/firebase.js';
 import { initializeDatabase } from './config/database.js';
 import { getCorsConfig } from './config/cors.js';
+import { loadEnvironment } from './config/env.js';
 import { handleError } from './utils/errorHandler.js';
+import { logger } from './utils/logger.js';
 
 // Load environment variables
-if (!process.env.VERCEL) {
-  const dotenv = await import('dotenv');
-  dotenv.config({ path: ['.env.local', '.env'], debug: true });
-}
+loadEnvironment();
 // Initialize app
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,14 +27,14 @@ app.use(cors(getCorsConfig()));
 try {
   initializeFirebase();
   initializeDatabase();
-  console.info('Firebase and Database initialized successfully');
+  logger.info('Firebase and Database initialized successfully');
 } catch (error) {
-  console.error('Failed to initialize services:', error);
+  logger.error('Failed to initialize services:', error);
   process.exit(1);
 }
 
 import v1Routes from './routes/v1/index.js';
-
+import v2Routes from './routes/v2/index.js';
 /**
  * Mount API Routes
  */
@@ -43,18 +42,17 @@ import v1Routes from './routes/v1/index.js';
 app.use('/api/v1', v1Routes);
 
 // Explicit V2 routes. Its same as v1 for now. But keep the structure for future
-// app.use('/api/v2', v2Routes);
+app.use('/api/v2', v2Routes);
 
 // Default unversioned /api/* routes map to the latest (V2)
-app.use('/api', v1Routes);
+app.use('/api', v2Routes);
 
 /**
  * Root and Health check (for load balancers)
  */
-const healthCheckHandler = (req: express.Request, res: express.Response) => {
+const healthCheckHandler = (req: express.Request, res: express.Response): void => {
   res.json({
     status: 'UP',
-    version: '1.0.0', // Service version
   });
 };
 
@@ -76,24 +74,27 @@ app.use((req, res) => {
  * Error Handler (global)
  */
 app.use((err: unknown, req: express.Request, res: Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error:', err);
   handleError(err, res);
 });
 
-// Start server only if not in a serverless environment (like Vercel)
-if (!process.env.VERCEL) {
+// Start server only if not in a serverless environment (like Vercel) or testing
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.info(`[INFO] Server starting on port ${PORT}`);
-    console.info(`[INFO] Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.info(`[INFO] Health check available at: http://localhost:${PORT}/api/health`);
-    console.info(
-      `[INFO] Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
+    logger.info(`Server starting on port ${PORT}`);
+    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`Health check available at: http://localhost:${PORT}/api/health`);
+    logger.info(
+      `Product scan endpoint available at: POST http://localhost:${PORT}/api/products/scan`
+    );
+    logger.info(
+      `Product redirect endpoint available at: GET http://localhost:${PORT}/api/redirect`
     );
   });
 
   // Graceful shutdown
   process.on('SIGTERM', () => {
-    console.info('SIGTERM received, shutting down gracefully...');
+    logger.info('SIGTERM received, shutting down gracefully...');
     process.exit(0);
   });
 }
