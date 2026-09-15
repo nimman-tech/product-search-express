@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { getAllowedMerchantDomains, DEFAULT_ALLOWED_MERCHANT_DOMAINS } from '../config/redirect.js';
 
+import { recordRedirectClick } from '../services/redirectService.js';
+
 const router = Router();
 
 export { DEFAULT_ALLOWED_MERCHANT_DOMAINS };
@@ -26,7 +28,9 @@ export function isAllowedDomain(targetUrl: string): boolean {
  * Query Params:
  *  - url: Original vendor product URL (required, encoded)
  *  - subid: Tracking SubID (optional, e.g. "modal_click")
- *  - product: Product title/identifier (optional)
+ *  - product / product_id: Product identifier (optional)
+ *  - product_type / type: Product category (optional, e.g. "mobile", "car")
+ *  - vendor: Merchant/Vendor name (optional)
  */
 export const handleRedirect = (req: Request, res: Response): void => {
   const targetUrl = req.query.url as string;
@@ -65,6 +69,29 @@ export const handleRedirect = (req: Request, res: Response): void => {
 
   // 6. Execute 302 Temporary Redirect
   res.redirect(302, monetizedUrl);
+
+  // 7. Asynchronously record click to DB (fire-and-forget)
+  const productId = (req.query.product_id as string) || (req.query.product as string) || null;
+  const productType = (req.query.product_type as string) || (req.query.type as string) || null;
+  const vendor = (req.query.vendor as string) || null;
+  const referrer =
+    (req.headers?.['referer'] as string) || (req.headers?.['referrer'] as string) || null;
+  const userAgent = (req.headers?.['user-agent'] as string) || null;
+  const ipAddress = (req.headers?.['x-forwarded-for'] as string) || req.ip || null;
+
+  recordRedirectClick({
+    productId,
+    productType,
+    vendor,
+    targetUrl,
+    monetizedUrl,
+    subid: sanitizedSubId,
+    referrer,
+    userAgent,
+    ipAddress,
+  }).catch((err) => {
+    console.error('Failed to record redirect click in database:', err);
+  });
 };
 
 router.get(['/', '/redirect'], handleRedirect);

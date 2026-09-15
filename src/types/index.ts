@@ -151,3 +151,18 @@ export interface RequestContext {
   email?: string;
   roles?: string[];
 }
+
+/**
+ * Click tracking record for outbound redirects
+ */
+export interface RedirectClickData {
+  productId?: string | null;
+  productType?: string | null;
+  vendor?: string | null;
+  targetUrl: string;
+  monetizedUrl: string;
+  subid?: string | null;
+  referrer?: string | null;
+  userAgent?: string | null;
+  ipAddress?: string | null;
+}

@@ -54,7 +54,6 @@ app.use('/api', v2Routes);
 const healthCheckHandler = (req: express.Request, res: express.Response) => {
   res.json({
     status: 'UP',
-    version: '1.0.0', // Service version
   });
 };
 

@@ -1,11 +1,20 @@
 import { Request, Response } from 'express';
 import { isAllowedDomain, handleRedirect, ALLOWED_MERCHANT_DOMAINS } from '../redirect.js';
+import { recordRedirectClick } from '../../services/redirectService.js';
+
+jest.mock('../../services/redirectService.js', () => ({
+  recordRedirectClick: jest.fn().mockResolvedValue(undefined),
+}));
 
 describe('Redirect Route', () => {
   const originalEnv = process.env;
+  const mockRecordRedirectClick = recordRedirectClick as jest.MockedFunction<
+    typeof recordRedirectClick
+  >;
 
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
     process.env = { ...originalEnv };
     process.env.CUELINKS_CHANNEL_ID = 'TEST_CHANNEL_123';
     process.env.CUELINKS_BASE_URL = 'https://linksredirect.com/';
@@ -108,6 +117,13 @@ describe('Redirect Route', () => {
       mockReq = {
         query: {
           url: 'https://www.amazon.in/dp/B09G9BL5CP',
+          product_id: 'prod_99',
+          product_type: 'mobile',
+          vendor: 'Amazon',
+        },
+        headers: {
+          referer: 'https://nimman.in/mobiles',
+          'user-agent': 'JestBrowser/1.0',
         },
       };
 
@@ -122,6 +138,18 @@ describe('Redirect Route', () => {
         302,
         'https://linksredirect.com/?cid=TEST_CHANNEL_123&url=https%3A%2F%2Fwww.amazon.in%2Fdp%2FB09G9BL5CP&subid=screener'
       );
+      expect(mockRecordRedirectClick).toHaveBeenCalledWith({
+        productId: 'prod_99',
+        productType: 'mobile',
+        vendor: 'Amazon',
+        targetUrl: 'https://www.amazon.in/dp/B09G9BL5CP',
+        monetizedUrl:
+          'https://linksredirect.com/?cid=TEST_CHANNEL_123&url=https%3A%2F%2Fwww.amazon.in%2Fdp%2FB09G9BL5CP&subid=screener',
+        subid: 'screener',
+        referrer: 'https://nimman.in/mobiles',
+        userAgent: 'JestBrowser/1.0',
+        ipAddress: null,
+      });
     });
 
     it('should fallback to CUELINKS_PUB_ID if CUELINKS_CHANNEL_ID is not provided', () => {
