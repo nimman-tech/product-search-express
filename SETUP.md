@@ -118,9 +118,31 @@ TURSO_CONNECTION_URL=libsql://your-db-name-your-org.turso.io
 TURSO_AUTH_TOKEN=<your-token>
 ```
 
-### Step 4: Create Database Tables
+### Step 4: Run Database Migrations
 
-See [Database Schema](#database-schema) section below for DDL statements.
+Apply all schema migrations automatically using the migration CLI:
+
+```bash
+npm run db:migrate
+```
+
+To check migration status:
+
+```bash
+npm run db:migrate:status
+```
+
+To mark existing schema as applied without re-running SQL (baselining):
+
+```bash
+npm run db:migrate:baseline --all
+```
+
+To create a new migration:
+
+```bash
+npm run db:migrate:create add_new_column_to_table
+```
 
 ---
 
@@ -186,27 +208,29 @@ In Vercel project settings:
    - `TURSO_CONNECTION_URL`: Your Turso connection URL
    - `TURSO_AUTH_TOKEN`: Your Turso auth token
    - `CORS_ORIGINS`: Your frontend domain (e.g., `https://nimman.in`)
+   - `ALLOWED_MERCHANT_DOMAINS`: Comma-separated list of allowed redirect merchant domains
+   - `CUELINKS_API_KEY`: API key for Cuelinks monetization
+   - `CUELINKS_API_URL`: Cuelinks API endpoint
    - `NODE_ENV`: `production`
 
 **Important**: Ensure `CORS_ORIGINS` includes your frontend domain.
 
 ### Step 4: Configure Build Settings (Optional)
 
-Vercel should auto-detect:
+Vercel will use configuration from `vercel.json`:
 
-- **Build Command**: `npm run build`
+- **Build Command**: `npm run vercel-build` (runs migrations via `npm run db:migrate` and compiles via `tsc`)
 - **Output Directory**: `dist`
 - **Install Command**: `npm install`
-
-If not auto-detected, set them manually.
 
 ### Step 5: Deploy
 
 Click **Deploy**. Vercel will:
 
 1. Install dependencies
-2. Build TypeScript
-3. Deploy to CDN
+2. Run database migrations (`npm run db:migrate`)
+3. Build TypeScript (`tsc`)
+4. Deploy serverless functions to the CDN
 
 Wait for deployment to complete. You'll get a URL like:
 
@@ -285,15 +309,15 @@ npm run test:watch
 
 ### HTML Test Report
 
-After running `npm test`, an HTML report is generated at `jest_html_reporters.html`. Open it in your browser to view pass/fail status, execution times, and detailed error information:
+After running `npm test`, an HTML report is generated at `test-reports/jest_html_reporters.html`. Open it in your browser to view pass/fail status, execution times, and detailed error information:
 
 ```bash
-open jest_html_reporters.html
+open test-reports/jest_html_reporters.html
 ```
 
-The report file and its attachments directory (`jest-html-reporters-attach/`) are excluded from version control via `.gitignore`.
+The report directory is excluded from version control via `.gitignore`.
 
-###Manual API Testing
+### Manual API Testing
 
 #### 1. Get Firebase Test Token
 
@@ -415,15 +439,15 @@ Response:
 
 ### Cars Table
 
-Key columns: `id`, `brand`, `model`, `year`, `price`, `engine_type`, `power`, `torque`, `transmission_type`, etc.
+Key columns: `id`, `name`, `make`, `model`, `variant`, `year`, `price`, `mrp`, `engine_type`, `transmission_type`, etc.
 
-See [cars.ddl](../database/cars.ddl) in original Spring Boot project.
+See [0002_create_cars.sql](file:///Users/manojkumar/Documents/Projects/Nimman/product-search-express/database/migrations/0002_create_cars.sql).
 
 ### Mobiles Table
 
-Key columns: `id`, `brand`, `model`, `release_year`, `price`, `ram`, `internal_storage`, `rear_camera_mp`, `battery_capacity`, etc.
+Key columns: `id`, `name`, `make`, `model`, `variant`, `year`, `price`, `mrp`, `memory_ram`, `memory_storage`, `battery_capacity`, etc.
 
-See [mobiles.ddl](../database/mobiles.ddl) in original Spring Boot project.
+See [0003_create_mobiles.sql](file:///Users/manojkumar/Documents/Projects/Nimman/product-search-express/database/migrations/0003_create_mobiles.sql).
 
 ---
 

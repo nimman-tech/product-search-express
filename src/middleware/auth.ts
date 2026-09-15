@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../config/firebase.js';
 import { RequestContext, FirebaseTokenClaims } from '../types/index.js';
 import { createAuthError, handleError } from '../utils/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Extend Express Request to include user context
@@ -44,7 +45,16 @@ export async function authMiddleware(
     const token = authHeader.substring(7); // Remove "Bearer " prefix
 
     // Verify token with Firebase
-    const decodedToken = (await verifyToken(token)) as FirebaseTokenClaims;
+    let decodedToken: FirebaseTokenClaims;
+    try {
+      decodedToken = (await verifyToken(token)) as FirebaseTokenClaims;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? `Token verification failed: ${err.message}`
+          : 'Token verification failed';
+      throw createAuthError(message);
+    }
 
     // Extract user info from token
     req.user = {
@@ -88,7 +98,7 @@ export async function optionalAuthMiddleware(
       };
     } catch (err) {
       // Token invalid but optional, continue without user
-      console.warn('Optional authentication token verification failed:', err);
+      logger.warn('Optional authentication token verification failed:', err);
     }
 
     next();

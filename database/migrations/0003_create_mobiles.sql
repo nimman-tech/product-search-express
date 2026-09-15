@@ -1,6 +1,7 @@
--- products.mobiles definition (SQLite)
+-- Migration: 0003_create_mobiles.sql
+-- Description: Create mobiles table
 
-CREATE TABLE `mobiles` (
+CREATE TABLE IF NOT EXISTS `mobiles` (
     `id` varchar(255) NOT NULL,
     `name` varchar(135) NOT NULL,
     `make` varchar(45) NOT NULL,
@@ -69,15 +70,12 @@ CREATE TABLE `mobiles` (
     `platform_os` varchar(45) NOT NULL,
     `platform_os_version` varchar(10) NOT NULL,
     `memory_ram` integer NOT NULL,
-    `mrp` integer NOT NULL,
     `memory_storage` integer NOT NULL,
     `memory_expandable` integer NOT NULL DEFAULT 0,
     `memory_storage_type` varchar(45) NOT NULL,
-    `official_buy_url` varchar(45) NOT NULL,
     `validation_status` varchar(45) NOT NULL,
     `version` varchar(45) NOT NULL,
     `last_updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE (`name`)
 );
-

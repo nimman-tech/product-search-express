@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getAllowedMerchantDomains, DEFAULT_ALLOWED_MERCHANT_DOMAINS } from '../config/redirect.js';
-
 import { recordRedirectClick } from '../services/redirectService.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -90,7 +90,7 @@ export const handleRedirect = (req: Request, res: Response): void => {
     userAgent,
     ipAddress,
   }).catch((err) => {
-    console.error('Failed to record redirect click in database:', err);
+    logger.error('Failed to record redirect click in database:', err);
   });
 };
 

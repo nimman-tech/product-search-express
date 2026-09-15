@@ -5,6 +5,7 @@
 import { Response } from 'express';
 import { VercelResponse } from '@vercel/node';
 import { ErrorResponse } from '../types/index.js';
+import { logger } from './logger.js';
 
 /**
  * Custom API Error class
@@ -26,7 +27,7 @@ export class APIError extends Error {
  * Handle and respond with errors
  */
 export function handleError(err: unknown, res: Response | VercelResponse): void {
-  console.error('Error:', err);
+  logger.error('Error:', err);
 
   let statusCode = 500;
   let code = 'INTERNAL_SERVER_ERROR';

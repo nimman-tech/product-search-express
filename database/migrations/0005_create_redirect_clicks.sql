@@ -1,3 +1,6 @@
+-- Migration: 0005_create_redirect_clicks.sql
+-- Description: Create redirect_clicks table and indexes
+
 CREATE TABLE IF NOT EXISTS `redirect_clicks` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `product_id` varchar(255) DEFAULT NULL,
