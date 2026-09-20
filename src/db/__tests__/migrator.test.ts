@@ -28,10 +28,22 @@ describe('Migrator', () => {
   });
 
   afterEach(async () => {
+    // Close the SQLite file handle first — on Windows, deleting a still-open
+    // db file fails with EBUSY since open files can't be unlinked.
+    dbClient.close();
     if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      // Best-effort cleanup only: on Windows the OS can hold onto the
+      // SQLite/WAL file handle well after close() returns (longer for tests
+      // that actually run migrations), so bound how long we wait rather than
+      // let a lingering lock hang the suite. Each test gets its own unique
+      // temp dir, so a leftover locked directory here doesn't affect other
+      // tests or later runs.
+      const cleanup = fs.promises
+        .rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 })
+        .catch(() => undefined);
+      await Promise.race([cleanup, new Promise((resolve) => setTimeout(resolve, 3000))]);
     }
-  });
+  }, 10000);
 
   test('calculates sha256 checksum correctly', () => {
     const checksum1 = migrator.calculateChecksum('SELECT 1;');
