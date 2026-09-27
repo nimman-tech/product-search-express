@@ -54,12 +54,13 @@ function buildWhereClause(
   conditions: Condition[] | undefined,
   mapper: ColumnMapper
 ): { clause: string; params: (string | number | boolean | null)[] } {
-  if (!conditions || conditions.length === 0) {
-    return { clause: '', params: [] };
-  }
-
-  const parts: string[] = [];
+  // Always exclude records with no price set, regardless of caller-supplied conditions.
+  const parts: string[] = [`${mapper.mapColumn('price')} > 0`];
   const params: (string | number | boolean | null)[] = [];
+
+  if (!conditions || conditions.length === 0) {
+    return { clause: parts.join(' AND '), params };
+  }
 
   for (const condition of conditions) {
     const dbColumn = mapper.mapColumn(condition.f);
