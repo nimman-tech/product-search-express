@@ -346,7 +346,7 @@ describe('scanProduct - Conditions Handling', () => {
     await scanProduct(request);
 
     expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE price > 0 AND year > ?'),
+      expect.stringContaining('WHERE CAST(price AS REAL) > 0 AND year > ?'),
       [2020]
     );
   });
@@ -641,7 +641,7 @@ describe('scanProduct - Automatic Launch Year Filter', () => {
     });
 
     expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE price > 0 AND year > ?'),
+      expect.stringContaining('WHERE CAST(price AS REAL) > 0 AND year > ?'),
       [2020]
     );
   });
@@ -658,7 +658,7 @@ describe('scanProduct - Automatic Launch Year Filter', () => {
     });
 
     expect(mockExecuteQuery).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE price > 0 AND year > ?'),
+      expect.stringContaining('WHERE CAST(price AS REAL) > 0 AND year > ?'),
       [2022]
     );
   });

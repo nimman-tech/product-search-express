@@ -55,7 +55,10 @@ function buildWhereClause(
   mapper: ColumnMapper
 ): { clause: string; params: (string | number | boolean | null)[] } {
   // Always exclude records with no price set, regardless of caller-supplied conditions.
-  const parts: string[] = [`${mapper.mapColumn('price')} > 0`];
+  // CAST is required because some rows store price as an empty string (''): SQLite
+  // compares by storage class before value, so any TEXT is always > any INTEGER/REAL,
+  // meaning a bare `price > 0` would treat '' as satisfying the filter.
+  const parts: string[] = [`CAST(${mapper.mapColumn('price')} AS REAL) > 0`];
   const params: (string | number | boolean | null)[] = [];
 
   if (!conditions || conditions.length === 0) {
